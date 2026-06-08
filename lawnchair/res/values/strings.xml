@@ -198,6 +198,7 @@
     <string name="system_description">Manage backups, system behaviors, and advanced settings.</string>
 
     <string name="about_label">About</string>
+    <string name="personalization_label">Personalization</string>
     <string name="preset_minimal">Origin Minimal</string>
     <string name="preset_minimal_description">Pixel-inspired layout with Material You dynamics. Clean, spacious, intentional.</string>
     <string name="preset_flow">Origin Flow</string>

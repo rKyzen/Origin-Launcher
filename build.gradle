@@ -123,13 +123,12 @@ allprojects {
     }
 }
 
-final def buildCommit
+def buildCommit = "unknown"
 try {
     buildCommit = providers.exec {
         commandLine('git', 'rev-parse', '--short=7', 'HEAD')
     }.standardOutput.asText.get().trim()
 } catch (Exception ignored) {
-    buildCommit = "unknown"
 }
 
 final def ciBuild = System.getenv("CI") == "true"

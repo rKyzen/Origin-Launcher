@@ -18,6 +18,8 @@ package app.lawnchair.ui.preferences
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.layout.DisplayFeature
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
+import app.lawnchair.ui.preferences.components.search.SettingsSearchBar
 import app.lawnchair.ui.preferences.navigation.PreferenceNavigation
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
 import app.lawnchair.ui.preferences.navigation.PreferenceRoute
@@ -124,46 +127,53 @@ private fun PreferenceScreen(
     navHost: @Composable () -> Unit,
 ) {
     val moveableNavHost = remember { movableContentOf { navHost() } }
-    when {
-        useTwoPane -> {
-            TwoPane(
-                first = {
-                    PreferencesDashboard(
-                        currentRoute = currentTopRoute,
-                        onNavigate = {
-                            navController.navigate(it) {
-                                launchSingleTop = true
-                                popUpTo(navController.graph.id)
-                            }
-                            onRouteChange(it)
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                useTwoPane -> {
+                    TwoPane(
+                        first = {
+                            PreferencesDashboard(
+                                currentRoute = currentTopRoute,
+                                onNavigate = {
+                                    navController.navigate(it) {
+                                        launchSingleTop = true
+                                        popUpTo(navController.graph.id)
+                                    }
+                                    onRouteChange(it)
+                                },
+                            )
                         },
+                        second = {
+                            moveableNavHost()
+                        },
+                        strategy = HorizontalTwoPaneStrategy(splitOffset = 420.dp),
+                        displayFeatures = displayFeatures,
                     )
-                },
-                second = {
-                    moveableNavHost()
-                },
-                strategy = HorizontalTwoPaneStrategy(splitOffset = 420.dp),
-                displayFeatures = displayFeatures,
-            )
-        }
+                }
 
-        isExpandedScreen -> {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
-                Box(
-                    modifier = Modifier.requiredWidth(640.dp),
-                ) {
+                isExpandedScreen -> {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                    ) {
+                        Box(
+                            modifier = Modifier.requiredWidth(640.dp),
+                        ) {
+                            moveableNavHost()
+                        }
+                    }
+                }
+
+                else -> {
                     moveableNavHost()
                 }
             }
         }
-
-        else -> {
-            moveableNavHost()
-        }
+        SettingsSearchBar(
+            navController = navController,
+        )
     }
 }
 

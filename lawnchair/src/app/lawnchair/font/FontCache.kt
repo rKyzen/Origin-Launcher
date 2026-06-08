@@ -78,46 +78,26 @@ class FontCache @Inject constructor(
 
     val uiRegular = ResourceFont(
         context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Normal.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 100f,
-        ),
+        R.font.ntype82_regular,
+        "NType 82",
     )
 
     val uiMedium = ResourceFont(
         context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Medium.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 0f,
-        ),
+        R.font.ntype82_regular,
+        "NType 82",
     )
 
     val uiText = ResourceFont(
         context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Normal.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 0f,
-        ),
+        R.font.ntype82_regular,
+        "NType 82",
     )
 
     val uiTextMedium = ResourceFont(
         context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Medium.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 100f,
-        ),
+        R.font.ntype82_regular,
+        "NType 82",
     )
 
     suspend fun getTypeface(font: Font): Typeface? {

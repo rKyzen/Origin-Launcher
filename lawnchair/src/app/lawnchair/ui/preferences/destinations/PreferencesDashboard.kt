@@ -40,6 +40,7 @@ import app.lawnchair.ui.preferences.navigation.Gestures
 import app.lawnchair.ui.preferences.navigation.GoogleFeed
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.OriginModes
+import app.lawnchair.ui.preferences.navigation.Personalization
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
 import app.lawnchair.ui.preferences.navigation.Quickstep
 import app.lawnchair.ui.preferences.navigation.Search
@@ -216,6 +217,17 @@ fun PreferencesDashboard(
                         iconResource = R.drawable.ic_general,
                         onNavigate = { onNavigate(BackupAndRestore) },
                         isSelected = currentRoute is BackupAndRestore,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.personalization_label),
+                        iconResource = R.drawable.ic_general,
+                        onNavigate = { onNavigate(Personalization) },
+                        isSelected = currentRoute is Personalization,
                         isFirst = it.isFirst,
                         isLast = false,
                     )

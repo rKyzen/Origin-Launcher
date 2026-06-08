@@ -28,6 +28,7 @@ import app.lawnchair.ui.preferences.destinations.GoogleFeedPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenPreferences
 import app.lawnchair.ui.preferences.destinations.IconPackPreferences
 import app.lawnchair.ui.preferences.destinations.OriginModePreferences
+import app.lawnchair.ui.preferences.destinations.PersonalizationPreferences
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
 import app.lawnchair.ui.preferences.destinations.QuickstepPreferences
 import app.lawnchair.ui.preferences.destinations.SearchPreferences
@@ -133,6 +134,10 @@ fun PreferenceNavigation(
             deepLinks = getDeepLink(GoogleFeed),
         ) { GoogleFeedPreferences(fromWidget = false) }
         composable<GoogleFeedWidget> { GoogleFeedPreferences(fromWidget = true) }
+
+        composable<Personalization>(
+            deepLinks = getDeepLink(Personalization),
+        ) { PersonalizationPreferences() }
 
         composable<PersonalizationIconPack>(
             deepLinks = getDeepLink(PersonalizationIconPack),

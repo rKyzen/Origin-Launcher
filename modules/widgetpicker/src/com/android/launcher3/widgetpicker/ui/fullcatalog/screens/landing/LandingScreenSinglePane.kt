@@ -29,7 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.runtime.Composable
@@ -51,9 +51,10 @@ import com.android.launcher3.widgetpicker.ui.components.SinglePaneLayout
 import com.android.launcher3.widgetpicker.ui.components.WidgetAppHeaderStyle
 import com.android.launcher3.widgetpicker.ui.components.WidgetAppsList
 import com.android.launcher3.widgetpicker.ui.components.widgetPickerTestTag
+import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.APPS_TAB_INDEX
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.DEFAULT_SELECTED_TAB
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.FEATURED_TAB_INDEX
-import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.PERSONAL_TAB_INDEX
+import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.ORIGIN_TAB_INDEX
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.TABS_COUNT_WITHOUT_WORK_PROFILE
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.TABS_COUNT_WITH_WORK_PROFILE
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.WORK_TAB_INDEX
@@ -63,8 +64,9 @@ import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.Landing
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.contentBottomEdgeSpacing
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.contentShape
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.pagerItemsSpacing
+import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneTestTags.APPS_WIDGETS_TAB_TEST_TAG
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneTestTags.FEATURED_WIDGETS_TAB_TEST_TAG
-import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneTestTags.PERSONAL_WIDGETS_TAB_TEST_TAG
+import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneTestTags.ORIGIN_WIDGETS_TAB_TEST_TAG
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneTestTags.WORK_WIDGETS_TAB_TEST_TAG
 import com.android.launcher3.widgetpicker.ui.theme.WidgetPickerTheme
 import kotlinx.coroutines.launch
@@ -102,11 +104,16 @@ fun LandingScreenSinglePane(
             },
         )
 
+    val (originWidgetApps, thirdPartyWidgetApps) = remember(browseWidgetsState.personalWidgetApps) {
+        browseWidgetsState.personalWidgetApps.partition {
+            it.id.packageName.startsWith("app.lawnchair")
+        }
+    }
+
     SinglePaneLayout(
         searchBar = searchBarContent,
         bottomFloatingContent = {
             BottomTabs(
-                personalUserProfile = browseWidgetsState.personalProfile,
                 workUserProfile = browseWidgetsState.workProfile,
                 pagerState = pagerState,
             )
@@ -133,11 +140,31 @@ fun LandingScreenSinglePane(
                         }
                     }
 
-                    PERSONAL_TAB_INDEX -> {
+                    ORIGIN_TAB_INDEX -> {
                         Box(modifier = Modifier.fillMaxSize()) {
                             WidgetAppsList(
                                 modifier = Modifier.fillMaxSize(),
-                                widgetApps = browseWidgetsState.personalWidgetApps,
+                                widgetApps = originWidgetApps,
+                                selectedWidgetAppId = selectedPersonalWidgetAppId,
+                                widgetAppHeaderStyle = WidgetAppHeaderStyle.EXPANDABLE,
+                                headerDescriptionStyle = AppHeaderDescriptionStyle.WIDGETS_COUNT,
+                                onWidgetAppClick = { widgetApp ->
+                                    onPersonalWidgetAppToggle(widgetApp.id)
+                                },
+                                appIcons = widgetAppIconsState.icons,
+                                widgetPreviews = personalWidgetPreviewsState.previews,
+                                onWidgetInteraction = onWidgetInteraction,
+                                showDragShadow = showDragShadow,
+                                bottomContentSpacing = contentBottomEdgeSpacing,
+                            )
+                        }
+                    }
+
+                    APPS_TAB_INDEX -> {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            WidgetAppsList(
+                                modifier = Modifier.fillMaxSize(),
+                                widgetApps = thirdPartyWidgetApps,
                                 selectedWidgetAppId = selectedPersonalWidgetAppId,
                                 widgetAppHeaderStyle = WidgetAppHeaderStyle.EXPANDABLE,
                                 headerDescriptionStyle = AppHeaderDescriptionStyle.WIDGETS_COUNT,
@@ -188,11 +215,13 @@ fun LandingScreenSinglePane(
 
 @Composable
 private fun BottomTabs(
-    pagerState: PagerState,
-    personalUserProfile: WidgetUserProfile,
     workUserProfile: WidgetUserProfile?,
+    pagerState: PagerState,
 ) {
     val scope = rememberCoroutineScope()
+
+    val originLabel = stringResource(R.string.widgets_section_origin_label)
+    val appsLabel = stringResource(R.string.widgets_section_apps_label)
 
     val tabs: List<@Composable () -> Unit> = buildList {
         add {
@@ -204,31 +233,25 @@ private fun BottomTabs(
                 modifier = Modifier.widgetPickerTestTag(FEATURED_WIDGETS_TAB_TEST_TAG),
             )
         }
-
-        if (workUserProfile == null) {
-            add {
-                LeadingIconToolbarTab(
-                    label = stringResource(R.string.browse_widgets_tab_label),
-                    leadingIcon = Icons.AutoMirrored.Filled.List,
-                    selected = pagerState.currentPage == PERSONAL_TAB_INDEX,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(PERSONAL_TAB_INDEX) }
-                    },
-                    modifier = Modifier.widgetPickerTestTag(PERSONAL_WIDGETS_TAB_TEST_TAG),
-                )
-            }
-        } else {
-            add {
-                LeadingIconToolbarTab(
-                    label = personalUserProfile.label,
-                    leadingIcon = Icons.Filled.Person,
-                    selected = pagerState.currentPage == PERSONAL_TAB_INDEX,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(PERSONAL_TAB_INDEX) }
-                    },
-                    modifier = Modifier.widgetPickerTestTag(PERSONAL_WIDGETS_TAB_TEST_TAG),
-                )
-            }
+        add {
+            LeadingIconToolbarTab(
+                label = originLabel,
+                leadingIcon = Icons.Filled.Home,
+                selected = pagerState.currentPage == ORIGIN_TAB_INDEX,
+                onClick = { scope.launch { pagerState.animateScrollToPage(ORIGIN_TAB_INDEX) } },
+                modifier = Modifier.widgetPickerTestTag(ORIGIN_WIDGETS_TAB_TEST_TAG),
+            )
+        }
+        add {
+            LeadingIconToolbarTab(
+                label = appsLabel,
+                leadingIcon = Icons.AutoMirrored.Filled.List,
+                selected = pagerState.currentPage == APPS_TAB_INDEX,
+                onClick = { scope.launch { pagerState.animateScrollToPage(APPS_TAB_INDEX) } },
+                modifier = Modifier.widgetPickerTestTag(APPS_WIDGETS_TAB_TEST_TAG),
+            )
+        }
+        if (workUserProfile != null) {
             add {
                 LeadingIconToolbarTab(
                     label = workUserProfile.label,
@@ -251,12 +274,13 @@ private fun BottomTabs(
 }
 
 private object LandingScreenSinglePaneDimens {
-    const val TABS_COUNT_WITH_WORK_PROFILE = 3
-    const val TABS_COUNT_WITHOUT_WORK_PROFILE = 2
+    const val TABS_COUNT_WITH_WORK_PROFILE = 4
+    const val TABS_COUNT_WITHOUT_WORK_PROFILE = 3
 
     const val FEATURED_TAB_INDEX = 0
-    const val PERSONAL_TAB_INDEX = 1
-    const val WORK_TAB_INDEX = 2
+    const val ORIGIN_TAB_INDEX = 1
+    const val APPS_TAB_INDEX = 2
+    const val WORK_TAB_INDEX = 3
     const val DEFAULT_SELECTED_TAB = FEATURED_TAB_INDEX
 
     val contentShape = RoundedCornerShape(24.dp)
@@ -266,12 +290,12 @@ private object LandingScreenSinglePaneDimens {
     val bottomTabsHorizontalPadding = 32.dp
     val bottomTabsBottomPadding = 8.dp
 
-    // Single pane always shows floating tabs over the content; hence has a static bottom spacing.
     val contentBottomEdgeSpacing = 70.dp
 }
 
 private object LandingScreenSinglePaneTestTags {
     const val FEATURED_WIDGETS_TAB_TEST_TAG = "featured_widgets_tab"
-    const val PERSONAL_WIDGETS_TAB_TEST_TAG = "personal_widgets_tab"
+    const val ORIGIN_WIDGETS_TAB_TEST_TAG = "origin_widgets_tab"
+    const val APPS_WIDGETS_TAB_TEST_TAG = "apps_widgets_tab"
     const val WORK_WIDGETS_TAB_TEST_TAG = "work_widgets_tab"
 }

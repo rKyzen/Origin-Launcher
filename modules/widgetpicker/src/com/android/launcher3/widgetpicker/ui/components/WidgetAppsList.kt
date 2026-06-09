@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.launcher3.widgetpicker.R
@@ -49,6 +52,9 @@ import com.android.launcher3.widgetpicker.ui.theme.WidgetPickerTheme
  *
  * Apps are displays as a header that user can select OR expand/collapse depending on the
  * [widgetAppHeaderStyle].
+ *
+ * When [sections] is provided, widget apps are grouped into sections with headers (e.g. "Origin"
+ * and "Apps") instead of being shown as a flat list.
  */
 @Composable
 fun WidgetAppsList(
@@ -64,8 +70,15 @@ fun WidgetAppsList(
     bottomContentSpacing: Dp = 0.dp,
     headerDescriptionStyle: AppHeaderDescriptionStyle = AppHeaderDescriptionStyle.WIDGETS_COUNT,
     emptyWidgetsErrorMessage: String? = null,
+    sections: Map<String, List<DisplayableWidgetApp>>? = null,
 ) {
-    if (widgetApps.isEmpty()) {
+    val isEmpty = if (sections != null) {
+        sections.values.all { it.isEmpty() }
+    } else {
+        widgetApps.isEmpty()
+    }
+
+    if (isEmpty) {
         NoWidgetsError(
             modifier = modifier,
             errorMessage =
@@ -80,54 +93,52 @@ fun WidgetAppsList(
             verticalArrangement = Arrangement.spacedBy(WidgetAppsListDimensions.itemSpacing),
             modifier = modifier.clip(WidgetAppsListDimensions.largeShape),
         ) {
-            items(
-                count = widgetApps.size,
-                key = { index -> widgetApps[index].id.toString() },
-                contentType = { widgetAppHeaderStyle },
-            ) { index ->
-                val widgetApp = widgetApps[index]
-                val selected = widgetApp.id == selectedWidgetAppId
-
-                val title = widgetApp.widgetHeaderTitle()
-                val description = widgetApp.widgetHeaderDescription(headerDescriptionStyle)
-
-                val appIconForItem =
-                    remember(appIcons) {
-                        appIcons[widgetApp.id]
-                            ?: WidgetAppIcon(AppIcon.PlaceHolderAppIcon, AppIconBadge.NoBadge)
+            if (sections != null) {
+                sections.forEach { (sectionName, sectionApps) ->
+                    if (sectionApps.isNotEmpty()) {
+                        item(key = "section_header_$sectionName", contentType = SECTION_HEADER_TYPE) {
+                            SectionHeader(title = sectionName)
+                        }
+                        items(
+                            count = sectionApps.size,
+                            key = { index -> sectionApps[index].id.toString() },
+                            contentType = { widgetAppHeaderStyle },
+                        ) { index ->
+                            WidgetAppItem(
+                                widgetApp = sectionApps[index],
+                                isFirstInSection = index == 0,
+                                isLastInSection = index == sectionApps.lastIndex,
+                                selectedWidgetAppId = selectedWidgetAppId,
+                                widgetAppHeaderStyle = widgetAppHeaderStyle,
+                                headerDescriptionStyle = headerDescriptionStyle,
+                                appIcons = appIcons,
+                                widgetPreviews = widgetPreviews,
+                                onWidgetAppClick = onWidgetAppClick,
+                                onWidgetInteraction = onWidgetInteraction,
+                                showDragShadow = showDragShadow,
+                            )
+                        }
                     }
-                val appIcon: @Composable () -> Unit =
-                    remember(appIconForItem) {
-                        { WidgetAppIcon(widgetAppIcon = appIconForItem, size = AppIconSize.MEDIUM) }
-                    }
-
-                when (widgetAppHeaderStyle) {
-                    WidgetAppHeaderStyle.EXPANDABLE -> {
-                        ExpandableWidgetAppHeader(
-                            isFirst = index == 0,
-                            isLast = index == widgetApps.lastIndex,
-                            expanded = selected,
-                            widgetApp = widgetApp,
-                            appIcon = appIcon,
-                            title = title,
-                            description = description,
-                            widgetPreviews = widgetPreviews,
-                            onWidgetAppClick = onWidgetAppClick,
-                            onWidgetInteraction = onWidgetInteraction,
-                            showDragShadow = showDragShadow,
-                        )
-                    }
-
-                    WidgetAppHeaderStyle.CLICKABLE ->
-                        SelectableListHeader(
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingAppIcon = appIcon,
-                            selected = selected,
-                            title = title,
-                            subTitle = description,
-                            shape = WidgetAppsListDimensions.largeShape,
-                            onSelect = { onWidgetAppClick(widgetApp) },
-                        )
+                }
+            } else {
+                items(
+                    count = widgetApps.size,
+                    key = { index -> widgetApps[index].id.toString() },
+                    contentType = { widgetAppHeaderStyle },
+                ) { index ->
+                    WidgetAppItem(
+                        widgetApp = widgetApps[index],
+                        isFirstInSection = index == 0,
+                        isLastInSection = index == widgetApps.lastIndex,
+                        selectedWidgetAppId = selectedWidgetAppId,
+                        widgetAppHeaderStyle = widgetAppHeaderStyle,
+                        headerDescriptionStyle = headerDescriptionStyle,
+                        appIcons = appIcons,
+                        widgetPreviews = widgetPreviews,
+                        onWidgetAppClick = onWidgetAppClick,
+                        onWidgetInteraction = onWidgetInteraction,
+                        showDragShadow = showDragShadow,
+                    )
                 }
             }
 
@@ -138,6 +149,77 @@ fun WidgetAppsList(
             }
         }
     }
+}
+
+@Composable
+private fun WidgetAppItem(
+    widgetApp: DisplayableWidgetApp,
+    isFirstInSection: Boolean,
+    isLastInSection: Boolean,
+    selectedWidgetAppId: WidgetAppId?,
+    widgetAppHeaderStyle: WidgetAppHeaderStyle,
+    headerDescriptionStyle: AppHeaderDescriptionStyle,
+    appIcons: Map<WidgetAppId, WidgetAppIcon>,
+    widgetPreviews: Map<WidgetId, WidgetPreview>,
+    onWidgetAppClick: (DisplayableWidgetApp) -> Unit,
+    onWidgetInteraction: (WidgetInteractionInfo) -> Unit,
+    showDragShadow: Boolean,
+) {
+    val selected = widgetApp.id == selectedWidgetAppId
+
+    val title = widgetApp.widgetHeaderTitle()
+    val description = widgetApp.widgetHeaderDescription(headerDescriptionStyle)
+
+    val appIconForItem =
+        remember(appIcons) {
+            appIcons[widgetApp.id]
+                ?: WidgetAppIcon(AppIcon.PlaceHolderAppIcon, AppIconBadge.NoBadge)
+        }
+    val appIcon: @Composable () -> Unit =
+        remember(appIconForItem) {
+            { WidgetAppIcon(widgetAppIcon = appIconForItem, size = AppIconSize.MEDIUM) }
+        }
+
+    when (widgetAppHeaderStyle) {
+        WidgetAppHeaderStyle.EXPANDABLE -> {
+            ExpandableWidgetAppHeader(
+                isFirst = isFirstInSection,
+                isLast = isLastInSection,
+                expanded = selected,
+                widgetApp = widgetApp,
+                appIcon = appIcon,
+                title = title,
+                description = description,
+                widgetPreviews = widgetPreviews,
+                onWidgetAppClick = onWidgetAppClick,
+                onWidgetInteraction = onWidgetInteraction,
+                showDragShadow = showDragShadow,
+            )
+        }
+
+        WidgetAppHeaderStyle.CLICKABLE ->
+            SelectableListHeader(
+                modifier = Modifier.fillMaxWidth(),
+                leadingAppIcon = appIcon,
+                selected = selected,
+                title = title,
+                subTitle = description,
+                shape = WidgetAppsListDimensions.largeShape,
+                onSelect = { onWidgetAppClick(widgetApp) },
+            )
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        color = WidgetPickerTheme.colors.listHeaderSubTitle,
+    )
 }
 
 @Composable
@@ -227,6 +309,7 @@ enum class AppHeaderDescriptionStyle {
 }
 
 private const val SPACER_LIST_ITEM_TYPE = "spacer"
+private const val SECTION_HEADER_TYPE = "section_header"
 
 private object WidgetAppsListDimensions {
     val itemSpacing = 4.dp

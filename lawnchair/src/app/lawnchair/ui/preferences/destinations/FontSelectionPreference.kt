@@ -73,6 +73,7 @@ fun FontSelection(
     val customFonts by remember { FontCache.INSTANCE.get(context).customFonts }.collectAsStateWithLifecycle(initialValue = emptyList())
     val items by produceState(initialValue = emptyList<FontCache.Family>()) {
         val list = mutableListOf<FontCache.Family>()
+        list.add(FontCache.Family(FontCache.ResourceFont(context, R.font.ntype82_regular, "NType 82")))
         list.add(FontCache.Family(FontCache.SystemFont("sans-serif")))
         list.add(FontCache.Family(FontCache.SystemFont("sans-serif-medium")))
         list.add(FontCache.Family(FontCache.SystemFont("sans-serif-condensed")))
@@ -90,6 +91,11 @@ fun FontSelection(
             }
             FontCache.Family(font.family, variantsMap)
         }
+        val currentFont = fontPref.get()
+        val existingNames = list.map { it.displayName }.toSet()
+        if (currentFont.displayName !in existingNames) {
+            list.add(FontCache.Family(currentFont))
+        }
         value = list
     }
     val allItems by remember { derivedStateOf { items + customFonts } }
@@ -103,7 +109,7 @@ fun FontSelection(
                 val lowerCaseQuery = searchQuery.lowercase()
                 allItems.filter { it.displayName.lowercase().contains(lowerCaseQuery) }
             } else {
-                items
+                allItems
             }
         }
     }

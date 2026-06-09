@@ -496,7 +496,7 @@ public final class FeatureFlagsImpl implements FeatureFlags {
 
 
     public boolean enableWidgetPickerRefactor() {
-        return false;
+        return true;
     }
 
     @Override

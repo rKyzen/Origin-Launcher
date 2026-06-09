@@ -199,6 +199,7 @@
 
     <string name="about_label">About</string>
     <string name="backup_restore_label">Backup &amp; Restore</string>
+    <string name="font_customization_label">Font</string>
     <string name="general_label">General</string>
     <string name="personalization_label">Personalization</string>
     <string name="preset_minimal">Origin Minimal</string>
@@ -551,6 +552,8 @@
 
     <string name="about_creator">Creator</string>
     <string name="about_creator_name" translatable="false">rKyzen</string>
+    <string name="about_contributors">Contributors</string>
+    <string name="about_contributor_folius_name" translatable="false">Folius (shubh72010)</string>
     <string name="community">Community</string>
     <string name="x_twitter" translatable="false">X</string>
     <string name="telegram">Telegram</string>

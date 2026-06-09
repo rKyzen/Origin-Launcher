@@ -8,6 +8,7 @@ data class AboutUiState(
     val versionName: String = "",
     val commitHash: String = "",
     val creator: Creator? = null,
+    val contributors: List<Creator> = emptyList(),
     val communityLinks: List<Link> = emptyList(),
     val updateState: UpdateState = UpdateState.Hidden,
 )

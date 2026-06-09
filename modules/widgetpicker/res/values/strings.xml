@@ -62,6 +62,11 @@
     <!-- Accessibility label for the button to go back from the search screen -->
     <string name="widget_search_bar_back_button_label">Back</string>
 
+    <!-- Section header for launcher's own widgets in the widget picker. [CHAR_LIMIT=25] -->
+    <string name="widgets_section_origin_label">Origin</string>
+    <!-- Section header for third-party app widgets in the widget picker. [CHAR_LIMIT=25] -->
+    <string name="widgets_section_apps_label">Apps</string>
+
     <!-- Text shown when there are no widgets or shortcuts that can be added to the device.
          [CHAR_LIMIT=150] -->
     <string name="widgets_list_no_widgets_available">Widgets and shortcuts aren\'t available</string>

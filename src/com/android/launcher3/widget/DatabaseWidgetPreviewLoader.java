@@ -282,7 +282,7 @@ public class DatabaseWidgetPreviewLoader {
 
         int size = iconSize + 2 * padding;
         if (maxHeight < size || maxWidth < size) {
-            throw new RuntimeException("Max size is too small for preview");
+            return null;
         }
         return BitmapRenderer.createHardwareBitmap(size, size, c -> {
             LauncherIcons li = LauncherIcons.obtain(mContext);

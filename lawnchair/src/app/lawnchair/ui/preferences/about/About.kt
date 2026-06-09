@@ -195,6 +195,27 @@ fun About(
                 }
             }
         }
+        if (uiState.contributors.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+            }
+            item {
+                PreferenceGroupHeading(stringResource(id = R.string.about_contributors))
+            }
+            uiState.contributors.forEachIndexed { index, contributor ->
+                item {
+                    PreferenceGroupItem(
+                        cutTop = false,
+                        cutBottom = index == uiState.contributors.lastIndex,
+                    ) {
+                        ClickablePreference(
+                            label = contributor.name,
+                            onClick = { openUrl(context, contributor.url) },
+                        )
+                    }
+                }
+            }
+        }
         item {
             Spacer(modifier = Modifier.requiredHeight(8.dp))
         }

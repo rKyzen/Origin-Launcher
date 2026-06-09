@@ -18,6 +18,7 @@ import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.components.notificationServiceEnabled
+import app.lawnchair.ui.preferences.navigation.FontCustomization
 import app.lawnchair.ui.preferences.navigation.PersonalizationCustomIconShapeCreator
 import app.lawnchair.ui.preferences.navigation.PersonalizationIconPack
 import app.lawnchair.ui.preferences.navigation.PersonalizationIconShape
@@ -75,6 +76,12 @@ fun GeneralPreferences(
                 SwitchPreference(
                     adapter = monoAdapter,
                     label = stringResource(R.string.monochrome_icons),
+                )
+            }
+            Item {
+                NavigationActionPreference(
+                    label = stringResource(R.string.font_customization_label),
+                    destination = FontCustomization,
                 )
             }
         }

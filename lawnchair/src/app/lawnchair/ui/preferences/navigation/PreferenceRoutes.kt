@@ -97,6 +97,11 @@ data object ExperimentalFeatures : PreferenceRootRoute, PreferenceDeepLink {
 }
 
 @Serializable
+data object FontCustomization : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/font-customization"
+}
+
+@Serializable
 data object DebugMenu : PreferenceRootRoute
 
 @Serializable

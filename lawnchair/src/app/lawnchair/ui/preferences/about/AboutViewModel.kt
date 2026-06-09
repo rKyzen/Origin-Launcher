@@ -45,6 +45,12 @@ class AboutViewModel(
                     name = application.getString(R.string.about_creator_name),
                     url = AboutUrls.CREATOR_PROFILE,
                 ),
+                contributors = listOf(
+                    Creator(
+                        name = application.getString(R.string.about_contributor_folius_name),
+                        url = AboutUrls.FOLIUS_PROFILE,
+                    ),
+                ),
                 communityLinks = communityLinks,
             )
         }

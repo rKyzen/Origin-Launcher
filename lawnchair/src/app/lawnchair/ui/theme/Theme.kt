@@ -55,9 +55,10 @@ fun LawnchairTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = getColorScheme(darkTheme = darkTheme)
+    val typography = fontTypography()
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content,
         shapes = Shapes,
         motionScheme = MotionScheme.expressive(),

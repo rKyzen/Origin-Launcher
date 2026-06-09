@@ -23,7 +23,10 @@ import app.lawnchair.ui.preferences.destinations.BackupAndRestorePreference
 import app.lawnchair.ui.preferences.destinations.CustomIconShapePreference
 import app.lawnchair.ui.preferences.destinations.DockPreferences
 import app.lawnchair.ui.preferences.destinations.DummyPreference
+import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.ui.preferences.destinations.ExperimentalFeaturesPreferences
+import app.lawnchair.ui.preferences.destinations.FontCustomizationPreferences
+import app.lawnchair.ui.preferences.destinations.FontSelection
 import app.lawnchair.ui.preferences.destinations.FolderPreferences
 import app.lawnchair.ui.preferences.destinations.GeneralPreferences
 import app.lawnchair.ui.preferences.destinations.GesturePreferences
@@ -146,6 +149,10 @@ fun PreferenceNavigation(
             deepLinks = getDeepLink(ExperimentalFeatures),
         ) { ExperimentalFeaturesPreferences() }
 
+        composable<FontCustomization>(
+            deepLinks = getDeepLink(FontCustomization),
+        ) { FontCustomizationPreferences() }
+
         composable<Search>(
             deepLinks = getDeepLink(Search()),
         ) { backStackEntry ->
@@ -162,6 +169,20 @@ fun PreferenceNavigation(
         composable<Personalization>(
             deepLinks = getDeepLink(Personalization),
         ) { PersonalizationPreferences() }
+
+        composable<PersonalizationFontSelection> { backStackEntry ->
+            val route: PersonalizationFontSelection = backStackEntry.toRoute()
+            val prefs = preferenceManager()
+            val fontPref = when (route.prefKey) {
+                prefs.fontWorkspace.key -> prefs.fontWorkspace
+                prefs.fontHeading.key -> prefs.fontHeading
+                prefs.fontHeadingMedium.key -> prefs.fontHeadingMedium
+                prefs.fontBody.key -> prefs.fontBody
+                prefs.fontBodyMedium.key -> prefs.fontBodyMedium
+                else -> prefs.fontWorkspace
+            }
+            FontSelection(fontPref = fontPref)
+        }
 
         composable<PersonalizationIconPack>(
             deepLinks = getDeepLink(PersonalizationIconPack),

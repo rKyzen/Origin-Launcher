@@ -74,13 +74,6 @@ fun ExperimentalFeaturesPreferences(
         ) {
             Item {
                 SwitchPreference(
-                    adapter = prefs2.enableFontSelection.getAdapter(),
-                    label = stringResource(id = R.string.font_picker_label),
-                    description = stringResource(id = R.string.font_picker_description),
-                )
-            }
-            Item {
-                SwitchPreference(
                     adapter = prefs.workspaceIncreaseMaxGridSize.getAdapter(),
                     label = stringResource(id = R.string.workspace_increase_max_grid_size_label),
                     description = stringResource(id = R.string.workspace_increase_max_grid_size_description),

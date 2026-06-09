@@ -385,7 +385,10 @@ Examples:
 - `lawnchair/src/app/lawnchair/ui/preferences/navigation/PreferenceNavigation.kt` — NavHost
 - `lawnchair/src/app/lawnchair/ui/preferences/navigation/PreferenceRoutes.kt` — All routes
 - `lawnchair/src/app/lawnchair/ui/preferences/destinations/PreferencesDashboard.kt` — Tabbed dashboard (Simple/Advanced)
-- `lawnchair/src/app/lawnchair/ui/preferences/destinations/GeneralPreferences.kt` — Theming hub (colors, icons, notification dots)
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/GeneralPreferences.kt` — Theming hub (colors, icons, notification dots, font)
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/FontCustomizationPreferences.kt` — Font role picker (sub-page of General)
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/FontSelectionPreference.kt` — Full font browser with search & custom fonts
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/FontSelectionPreference.kt` — Full font browser with search & custom fonts
 
 **Architecture:**
 - Full Kotlin/Compose UI using Jetpack Navigation + Material3
@@ -397,6 +400,37 @@ Examples:
 **Preferences system:**
 - Legacy: `PreferenceManager` (direct SharedPreferences)
 - Modern: `PreferenceManager2` (uses `Opto` library — type-safe prefs with Flow support)
+
+### General Screen (Theming Hub)
+
+**File:** `lawnchair/src/app/lawnchair/ui/preferences/destinations/GeneralPreferences.kt`
+
+The General screen is the central theming hub. It exposes:
+
+| Section | Items |
+|---------|-------|
+| **Theme** | Accent color, Icon pack, Icon shape, Custom icon shape, Icon size, Monochrome icons toggle, **Font** (navigates to `FontCustomization`) |
+| **Notification Dots** | Badge toggle, dot color, text color |
+
+### Font Customization
+
+**Files:**
+- `FontCustomizationPreferences.kt` — Lists all 5 font roles with current font preview
+- `FontSelectionPreference.kt` — Full font browser with search, system/variable/Google/custom fonts
+
+**Font roles** (5 roles, each independently configurable):
+
+| Role | Preference Key | Default |
+|------|---------------|---------|
+| Base Icon | `fontWorkspace` | `uiText` |
+| Heading | `fontHeading` | `uiRegular` |
+| Heading Medium | `fontHeadingMedium` | `uiMedium` |
+| Body | `fontBody` | `uiText` |
+| Body Medium | `fontBodyMedium` | `uiTextMedium` |
+
+**Flow:** General → Font → tap a role → `FontSelection` (picker with search, radio buttons, variant dropdown)
+
+**Enable/disable:** A toggle at the top of Font Customization screen (`enableFontSelection` preference). When disabled, fonts fall back to system defaults. Previously buried in Experimental Features.
 
 ### Dashboard Layout (PreferencesDashboard.kt)
 

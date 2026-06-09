@@ -36,6 +36,7 @@ import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.Dock
 import app.lawnchair.ui.preferences.navigation.ExperimentalFeatures
 import app.lawnchair.ui.preferences.navigation.Folders
+import app.lawnchair.ui.preferences.navigation.General
 import app.lawnchair.ui.preferences.navigation.Gestures
 import app.lawnchair.ui.preferences.navigation.GoogleFeed
 import app.lawnchair.ui.preferences.navigation.HomeScreen
@@ -83,6 +84,17 @@ fun PreferencesDashboard(
             PreferenceGroup {
                 Item {
                     PreferenceCategory(
+                        label = stringResource(R.string.general_label),
+                        iconResource = R.drawable.ic_general,
+                        onNavigate = { onNavigate(General) },
+                        isSelected = currentRoute is General,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
                         label = stringResource(R.string.smartspace_widget),
                         iconResource = R.drawable.ic_smartspace,
                         onNavigate = { onNavigate(GoogleFeed) },
@@ -94,11 +106,10 @@ fun PreferencesDashboard(
 
                 Item {
                     PreferenceCategory(
-                        label = stringResource(R.string.origin_label),
-                        description = originDesc,
-                        iconResource = R.drawable.ic_general,
-                        onNavigate = { onNavigate(OriginModes) },
-                        isSelected = currentRoute is OriginModes,
+                        label = stringResource(R.string.app_drawer_label),
+                        iconResource = R.drawable.ic_apps,
+                        onNavigate = { onNavigate(AppDrawer) },
+                        isSelected = currentRoute is AppDrawer,
                         isFirst = it.isFirst,
                         isLast = false,
                     )
@@ -106,10 +117,11 @@ fun PreferencesDashboard(
 
                 Item {
                     PreferenceCategory(
-                        label = stringResource(R.string.app_drawer_label),
-                        iconResource = R.drawable.ic_apps,
-                        onNavigate = { onNavigate(AppDrawer) },
-                        isSelected = currentRoute is AppDrawer,
+                        label = stringResource(R.string.origin_label),
+                        description = originDesc,
+                        iconResource = R.drawable.ic_lightbulb,
+                        onNavigate = { onNavigate(OriginModes) },
+                        isSelected = currentRoute is OriginModes,
                         isFirst = it.isFirst,
                         isLast = false,
                     )
@@ -141,6 +153,39 @@ fun PreferencesDashboard(
             }
 
             PreferenceGroup {
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.general_label),
+                        iconResource = R.drawable.ic_general,
+                        onNavigate = { onNavigate(General) },
+                        isSelected = currentRoute is General,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.smartspace_widget),
+                        iconResource = R.drawable.ic_smartspace,
+                        onNavigate = { onNavigate(GoogleFeed) },
+                        isSelected = currentRoute is GoogleFeed,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.app_drawer_label),
+                        iconResource = R.drawable.ic_apps,
+                        onNavigate = { onNavigate(AppDrawer) },
+                        isSelected = currentRoute is AppDrawer,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
                 Item {
                     PreferenceCategory(
                         label = stringResource(R.string.home_screen_label),
@@ -212,9 +257,9 @@ fun PreferencesDashboard(
 
                 Item {
                     PreferenceCategory(
-                        label = stringResource(R.string.system_label),
+                        label = stringResource(R.string.backup_restore_label),
                         description = stringResource(R.string.system_description),
-                        iconResource = R.drawable.ic_general,
+                        iconResource = R.drawable.ic_download,
                         onNavigate = { onNavigate(BackupAndRestore) },
                         isSelected = currentRoute is BackupAndRestore,
                         isFirst = it.isFirst,
@@ -225,7 +270,7 @@ fun PreferencesDashboard(
                 Item {
                     PreferenceCategory(
                         label = stringResource(R.string.personalization_label),
-                        iconResource = R.drawable.ic_general,
+                        iconResource = R.drawable.ic_wallpaper,
                         onNavigate = { onNavigate(Personalization) },
                         isSelected = currentRoute is Personalization,
                         isFirst = it.isFirst,
@@ -236,7 +281,7 @@ fun PreferencesDashboard(
                 Item {
                     PreferenceCategory(
                         label = stringResource(R.string.experimental_features_label),
-                        iconResource = R.drawable.ic_general,
+                        iconResource = R.drawable.ic_new_releases,
                         onNavigate = { onNavigate(ExperimentalFeatures) },
                         isSelected = currentRoute is ExperimentalFeatures,
                         isFirst = it.isFirst,

@@ -77,6 +77,11 @@ data object Gestures : PreferenceRootRoute, PreferenceDeepLink {
 }
 
 @Serializable
+data object General : PreferenceRootRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/general"
+}
+
+@Serializable
 data object GoogleFeed : PreferenceRootRoute, PreferenceDeepLink {
     override val deepLink = "$URI/google-feed"
 }

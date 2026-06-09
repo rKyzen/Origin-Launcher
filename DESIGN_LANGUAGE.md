@@ -284,6 +284,7 @@ Examples:
 - `LawnchairAlphabeticalAppsList.addAppsWithSections()` extends the list with categorized/folder layout
 - `AllAppsSearchInput` replaces standard QSB with Lawnchair search (customizable, supports 24 search providers)
 - Hidden apps filtering, drawer folders, app categorization via Flowerpot
+- **Auto-show keyboard:** The keyboard automatically opens when the app drawer opens (`SearchBarStateHandler.kt`). Controlled by `autoShowKeyboardInDrawer` preference (default: `true`). Toggle in Settings → Drawer → Search → "Auto-show keyboard".
 
 ### 5.2 Hotseat / Dock
 
@@ -383,6 +384,8 @@ Examples:
 - `lawnchair/src/app/lawnchair/ui/preferences/PreferenceViewModel.kt` — ViewModel
 - `lawnchair/src/app/lawnchair/ui/preferences/navigation/PreferenceNavigation.kt` — NavHost
 - `lawnchair/src/app/lawnchair/ui/preferences/navigation/PreferenceRoutes.kt` — All routes
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/PreferencesDashboard.kt` — Tabbed dashboard (Simple/Advanced)
+- `lawnchair/src/app/lawnchair/ui/preferences/destinations/GeneralPreferences.kt` — Theming hub (colors, icons, notification dots)
 
 **Architecture:**
 - Full Kotlin/Compose UI using Jetpack Navigation + Material3
@@ -394,6 +397,21 @@ Examples:
 **Preferences system:**
 - Legacy: `PreferenceManager` (direct SharedPreferences)
 - Modern: `PreferenceManager2` (uses `Opto` library — type-safe prefs with Flow support)
+
+### Dashboard Layout (PreferencesDashboard.kt)
+
+Two-tier tab system (`TwoTabPreferenceLayout`):
+
+| Tab | Description | Items |
+|-----|-------------|-------|
+| **Simple** | Curated essentials, 5 items | General, At a Glance, App Drawer, Origin Modes, About |
+| **Advanced** | Superset of Simple + all configuration | General, At a Glance, App Drawer, Home Screen, Dock, Search Bar, Folders, Gestures, Recents, Backup & Restore, Personalization, Experimental Features |
+
+**Rules:**
+- **Advanced tab is always a strict superset of Simple tab** — no item disappears when switching tabs
+- Each entry has a **unique, distinct icon** (no `ic_general` reuse)
+- New top-level screens must be added to **both** tabs
+- Icon assignments: General → `ic_general`, At a Glance → `ic_smartspace`, App Drawer → `ic_apps`, Origin Modes → `ic_lightbulb`, Home Screen → `ic_home_screen`, Dock → `ic_dock`, Search → `ic_search`, Folders → `ic_folder`, Gestures → `ic_gestures`, Recents → `ic_quickstep`, Backup & Restore → `ic_download`, Personalization → `ic_wallpaper`, Experimental → `ic_new_releases`, About → `ic_about`
 
 ### 5.8 Recents / Overview (Quickstep)
 

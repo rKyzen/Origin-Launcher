@@ -17,14 +17,19 @@ import app.lawnchair.ui.preferences.about.About
 import app.lawnchair.ui.preferences.about.acknowledgements.Acknowledgements
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreferenceModelList
 import app.lawnchair.ui.preferences.components.colorpreference.ColorSelection
+import app.lawnchair.backup.ui.CreateBackupScreen
 import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
 import app.lawnchair.ui.preferences.destinations.BackupAndRestorePreference
+import app.lawnchair.ui.preferences.destinations.CustomIconShapePreference
 import app.lawnchair.ui.preferences.destinations.DockPreferences
 import app.lawnchair.ui.preferences.destinations.DummyPreference
 import app.lawnchair.ui.preferences.destinations.ExperimentalFeaturesPreferences
 import app.lawnchair.ui.preferences.destinations.FolderPreferences
+import app.lawnchair.ui.preferences.destinations.GeneralPreferences
 import app.lawnchair.ui.preferences.destinations.GesturePreferences
 import app.lawnchair.ui.preferences.destinations.GoogleFeedPreferences
+import app.lawnchair.ui.preferences.destinations.HiddenAppsPreferences
+import app.lawnchair.ui.preferences.destinations.HomeScreenGridPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenPreferences
 import app.lawnchair.ui.preferences.destinations.IconPackPreferences
 import app.lawnchair.ui.preferences.destinations.OriginModePreferences
@@ -32,7 +37,9 @@ import app.lawnchair.ui.preferences.destinations.PersonalizationPreferences
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
 import app.lawnchair.ui.preferences.destinations.QuickstepPreferences
 import app.lawnchair.ui.preferences.destinations.SearchPreferences
+import app.lawnchair.ui.preferences.destinations.SearchProviderPreferences
 import app.lawnchair.ui.preferences.destinations.ShapePreference
+import androidx.lifecycle.viewmodel.compose.viewModel
 import soup.compose.material.motion.animation.materialSharedAxisXIn
 import soup.compose.material.motion.animation.materialSharedAxisXOut
 import soup.compose.material.motion.animation.rememberSlideDistance
@@ -90,6 +97,9 @@ fun PreferenceNavigation(
         composable<AppDrawer>(
             deepLinks = getDeepLink(AppDrawer),
         ) { AppDrawerPreferences() }
+        composable<AppDrawerHiddenApps>(
+            deepLinks = getDeepLink(AppDrawerHiddenApps),
+        ) { HiddenAppsPreferences() }
 
         composable<About>(
             deepLinks = getDeepLink(About),
@@ -98,10 +108,16 @@ fun PreferenceNavigation(
         composable<HomeScreen>(
             deepLinks = getDeepLink(HomeScreen),
         ) { HomeScreenPreferences() }
+        composable<HomeScreenGrid>(
+            deepLinks = getDeepLink(HomeScreenGrid),
+        ) { HomeScreenGridPreferences() }
 
         composable<Dock>(
             deepLinks = getDeepLink(Dock),
         ) { DockPreferences() }
+        composable<DockSearchProvider>(
+            deepLinks = getDeepLink(DockSearchProvider),
+        ) { SearchProviderPreferences() }
 
         composable<Folders>(
             deepLinks = getDeepLink(Folders),
@@ -111,6 +127,10 @@ fun PreferenceNavigation(
             deepLinks = getDeepLink(Gestures),
         ) { GesturePreferences() }
 
+        composable<General>(
+            deepLinks = getDeepLink(General),
+        ) { GeneralPreferences() }
+
         composable<Quickstep>(
             deepLinks = getDeepLink(Quickstep),
         ) { QuickstepPreferences() }
@@ -118,6 +138,9 @@ fun PreferenceNavigation(
         composable<BackupAndRestore>(
             deepLinks = getDeepLink(BackupAndRestore),
         ) { BackupAndRestorePreference() }
+        composable<CreateBackup>(
+            deepLinks = getDeepLink(CreateBackup),
+        ) { CreateBackupScreen(viewModel = viewModel()) }
 
         composable<ExperimentalFeatures>(
             deepLinks = getDeepLink(ExperimentalFeatures),
@@ -129,6 +152,7 @@ fun PreferenceNavigation(
             val route: Search = backStackEntry.toRoute()
             SearchPreferences(currentTab = route.selectedId)
         }
+        composable<SearchProviderPreference> { SearchProviderPreferences() }
 
         composable<GoogleFeed>(
             deepLinks = getDeepLink(GoogleFeed),
@@ -145,6 +169,12 @@ fun PreferenceNavigation(
         composable<PersonalizationIconShape> { backStackEntry ->
             val route: PersonalizationIconShape = backStackEntry.toRoute()
             ShapePreference(currentTab = route.selectedId)
+        }
+        composable<PersonalizationCustomIconShapeCreator>(
+            deepLinks = getDeepLink(PersonalizationCustomIconShapeCreator()),
+        ) { backStackEntry ->
+            val route: PersonalizationCustomIconShapeCreator = backStackEntry.toRoute()
+            CustomIconShapePreference(currentTab = route.selectedId)
         }
         composable<ColorSelection> { backStackEntry ->
             val screen: ColorSelection = backStackEntry.toRoute()

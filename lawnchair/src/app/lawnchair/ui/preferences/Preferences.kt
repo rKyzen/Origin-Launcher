@@ -44,7 +44,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.layout.DisplayFeature
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
-import app.lawnchair.ui.preferences.components.search.SettingsSearchBar
 import app.lawnchair.ui.preferences.navigation.PreferenceNavigation
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
 import app.lawnchair.ui.preferences.navigation.PreferenceRoute
@@ -171,9 +170,6 @@ private fun PreferenceScreen(
                 }
             }
         }
-        SettingsSearchBar(
-            navController = navController,
-        )
     }
 }
 

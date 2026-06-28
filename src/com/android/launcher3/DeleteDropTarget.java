@@ -157,6 +157,15 @@ public class DeleteDropTarget extends ButtonDropTarget {
                     + " users should always be able to delete the item from launcher's db."
                     + " Invalid drag ItemInfo: " + item);
         }
+
+        // Handle multi-drag additional items
+        if (d.isMultiDrag()) {
+            for (ItemInfo additionalItem : d.additionalItems) {
+                if (canRemove(additionalItem)) {
+                    mDropTargetHandler.onDeleteComplete(additionalItem, /* view */ null);
+                }
+            }
+        }
     }
 
     /**

@@ -22,6 +22,8 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
+
 import com.android.launcher3.accessibility.DragViewStateAnnouncer;
 import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.dragndrop.DragOptions;
@@ -83,9 +85,17 @@ public interface DropTarget {
         /** Used for matching DROP event with its corresponding DRAG event on the server side. */
         public final InstanceId logInstanceId = new InstanceIdSequence().newInstanceId();
 
+        /** Additional items being dragged in a multi-drag operation. Empty for single-drag. */
+        public final ArrayList<ItemInfo> additionalItems = new ArrayList<>();
+
         public DragObject(Context context) {
             folderNameSuggestionLoader = LauncherComponentProvider.get(context)
                     .getFolderNameSuggestionLoader();
+        }
+
+        /** Returns true if this is a multi-drag operation with additional items. */
+        public boolean isMultiDrag() {
+            return !additionalItems.isEmpty();
         }
 
         /**

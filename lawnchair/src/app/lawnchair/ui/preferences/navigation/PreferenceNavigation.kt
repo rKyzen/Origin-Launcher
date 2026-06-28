@@ -39,6 +39,7 @@ import app.lawnchair.ui.preferences.destinations.OriginModePreferences
 import app.lawnchair.ui.preferences.destinations.PersonalizationPreferences
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
 import app.lawnchair.ui.preferences.destinations.QuickstepPreferences
+import app.lawnchair.ui.preferences.destinations.WidgetPreferences
 import app.lawnchair.ui.preferences.destinations.SearchPreferences
 import app.lawnchair.ui.preferences.destinations.SearchProviderPreferences
 import app.lawnchair.ui.preferences.destinations.ShapePreference
@@ -137,6 +138,10 @@ fun PreferenceNavigation(
         composable<Quickstep>(
             deepLinks = getDeepLink(Quickstep),
         ) { QuickstepPreferences() }
+
+        composable<Widgets>(
+            deepLinks = getDeepLink(Widgets),
+        ) { WidgetPreferences() }
 
         composable<BackupAndRestore>(
             deepLinks = getDeepLink(BackupAndRestore),

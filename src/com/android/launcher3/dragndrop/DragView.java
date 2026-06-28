@@ -122,6 +122,7 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
     private Path mScaledMaskPath;
     private Drawable mBadge;
     private int mItemType;
+    private int mMultiItemCount = 0;
 
     public DragView(T launcher, Drawable drawable, int registrationX,
             int registrationY, final float initialScale, final float scaleOnDrop,
@@ -232,6 +233,64 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
 
         mBlurSizeOutline = getResources().getDimensionPixelSize(R.dimen.blur_size_medium_outline);
         setWillNotDraw(false);
+    }
+
+    /**
+     * Sets the number of additional items being dragged in a multi-drag operation.
+     * When > 0, a badge overlay is drawn showing the count.
+     */
+    public void setMultiItemCount(int count) {
+        mMultiItemCount = count;
+        invalidate();
+    }
+
+    /** Returns the number of additional items in a multi-drag operation. */
+    public int getMultiItemCount() {
+        return mMultiItemCount;
+    }
+
+    /**
+     * Draws a badge overlay when multi-drag is active.
+     * Called from subclasses that override draw().
+     */
+    protected void drawMultiDragBadge(Canvas canvas) {
+        if (mMultiItemCount <= 0) return;
+        // Draw a pill-shaped badge in the top-right corner
+        String text = "+" + mMultiItemCount;
+        android.graphics.Paint paint = new android.graphics.Paint(
+                android.graphics.Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(0xFFFF4444);
+        paint.setTextSize(getResources().getDimension(
+                com.android.launcher3.R.dimen.multi_drag_badge_text_size));
+        paint.setFakeBoldText(true);
+        paint.setTextAlign(android.graphics.Paint.Align.CENTER);
+
+        float textWidth = paint.measureText(text);
+        float textHeight = paint.getTextSize();
+        float padding = getResources().getDimension(
+                com.android.launcher3.R.dimen.multi_drag_badge_padding);
+        float badgeWidth = Math.max(textWidth + padding * 2, textHeight + padding);
+        float badgeHeight = textHeight + padding;
+
+        float badgeX = getWidth() - badgeWidth / 2f;
+        float badgeY = badgeHeight / 2f;
+
+        // Draw pill background
+        paint.setColor(0xCC000000);
+        paint.setStyle(android.graphics.Paint.Style.FILL);
+        canvas.drawRoundRect(
+                badgeX - badgeWidth / 2f,
+                badgeY - badgeHeight / 2f,
+                badgeX + badgeWidth / 2f,
+                badgeY + badgeHeight / 2f,
+                badgeHeight / 2f,
+                badgeHeight / 2f,
+                paint);
+
+        // Draw count text
+        paint.setColor(0xFFFFFFFF);
+        paint.setStyle(android.graphics.Paint.Style.FILL);
+        canvas.drawText(text, badgeX, badgeY + textHeight / 3f, paint);
     }
 
     /** Callback invoked when the scale animation ends. */
@@ -372,6 +431,7 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
             canvas.restoreToCount(cnt);
             mBadge.draw(canvas);
         }
+        drawMultiDragBadge(canvas);
     }
 
     public void crossFadeContent(Drawable crossFadeDrawable, int duration) {

@@ -9,6 +9,13 @@ import app.lawnchair.search.algorithms.data.calculator.internal.Token
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
+import kotlin.math.cos as kotlinCos
+import kotlin.math.ln as kotlinLn
+import kotlin.math.log10 as kotlinLog10
+import kotlin.math.pow as kotlinPow
+import kotlin.math.sin as kotlinSin
+import kotlin.math.sqrt as kotlinSqrt
+import kotlin.math.tan as kotlinTan
 
 class ExpressionException(message: String) : RuntimeException(message)
 
@@ -105,6 +112,57 @@ class Expressions {
             } else {
                 elseValue
             }
+        }
+
+        evaluator.addFunction("sqrt") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("sqrt requires one argument")
+            }
+            BigDecimal.valueOf(kotlinSqrt(arguments.first().toDouble()))
+        }
+
+        evaluator.addFunction("pow") { arguments ->
+            if (arguments.size != 2) {
+                throw ExpressionException("pow requires two arguments")
+            }
+            val base = arguments[0].toDouble()
+            val exp = arguments[1].toDouble()
+            BigDecimal.valueOf(base.kotlinPow(exp))
+        }
+
+        evaluator.addFunction("sin") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("sin requires one argument")
+            }
+            BigDecimal.valueOf(kotlinSin(arguments.first().toDouble()))
+        }
+
+        evaluator.addFunction("cos") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("cos requires one argument")
+            }
+            BigDecimal.valueOf(kotlinCos(arguments.first().toDouble()))
+        }
+
+        evaluator.addFunction("tan") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("tan requires one argument")
+            }
+            BigDecimal.valueOf(kotlinTan(arguments.first().toDouble()))
+        }
+
+        evaluator.addFunction("log") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("log requires one argument")
+            }
+            BigDecimal.valueOf(kotlinLog10(arguments.first().toDouble()))
+        }
+
+        evaluator.addFunction("ln") { arguments ->
+            if (arguments.size != 1) {
+                throw ExpressionException("ln requires one argument")
+            }
+            BigDecimal.valueOf(kotlinLn(arguments.first().toDouble()))
         }
     }
 

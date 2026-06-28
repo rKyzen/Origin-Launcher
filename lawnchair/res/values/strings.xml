@@ -1033,4 +1033,9 @@
     <string name="monochrome_icons">Monochrome Icons</string>
     <string name="dock_accent_color">Use accent color</string>
     <string name="dock_restart_note">Changes to dock require a restart</string>
+    <string name="widgets_label">Widgets</string>
+    <string name="widgets_standard">Standard</string>
+    <string name="widgets_standard_description">Show widgets from all installed apps</string>
+    <string name="widgets_origin">Origin</string>
+    <string name="widgets_origin_description">Show only Origin\'s own widgets</string>
 </resources>

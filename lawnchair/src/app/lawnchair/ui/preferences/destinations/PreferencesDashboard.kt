@@ -44,6 +44,7 @@ import app.lawnchair.ui.preferences.navigation.OriginModes
 import app.lawnchair.ui.preferences.navigation.Personalization
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
 import app.lawnchair.ui.preferences.navigation.Quickstep
+import app.lawnchair.ui.preferences.navigation.Widgets
 import app.lawnchair.ui.preferences.navigation.Search
 import app.lawnchair.util.isDefaultLauncher
 import com.android.launcher3.BuildConfig
@@ -122,6 +123,17 @@ fun PreferencesDashboard(
                         iconResource = R.drawable.ic_lightbulb,
                         onNavigate = { onNavigate(OriginModes) },
                         isSelected = currentRoute is OriginModes,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.widgets_label),
+                        iconResource = R.drawable.ic_widgets,
+                        onNavigate = { onNavigate(Widgets) },
+                        isSelected = currentRoute is Widgets,
                         isFirst = it.isFirst,
                         isLast = false,
                     )
@@ -250,6 +262,17 @@ fun PreferencesDashboard(
                         iconResource = R.drawable.ic_quickstep,
                         onNavigate = { onNavigate(Quickstep) },
                         isSelected = currentRoute is Quickstep,
+                        isFirst = it.isFirst,
+                        isLast = false,
+                    )
+                }
+
+                Item {
+                    PreferenceCategory(
+                        label = stringResource(R.string.widgets_label),
+                        iconResource = R.drawable.ic_widgets,
+                        onNavigate = { onNavigate(Widgets) },
+                        isSelected = currentRoute is Widgets,
                         isFirst = it.isFirst,
                         isLast = false,
                     )

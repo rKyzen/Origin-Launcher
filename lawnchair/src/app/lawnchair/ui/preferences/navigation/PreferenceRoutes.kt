@@ -102,6 +102,11 @@ data object FontCustomization : PreferenceRoute, PreferenceDeepLink {
 }
 
 @Serializable
+data object Widgets : PreferenceRootRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/widgets"
+}
+
+@Serializable
 data object DebugMenu : PreferenceRootRoute
 
 @Serializable

@@ -450,7 +450,21 @@ public abstract class DragController<T extends ActivityContext>
      */
     @Override
     public boolean onControllerTouchEvent(MotionEvent ev) {
+        if (mDragDriver != null && ev.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN) {
+            int pointerIndex = ev.getActionIndex();
+            float x = ev.getX(pointerIndex);
+            float y = ev.getY(pointerIndex);
+            onPointerDownDuringDrag(x, y);
+        }
         return mDragDriver != null && mDragDriver.onTouchEvent(ev);
+    }
+
+    /**
+     * Called when an additional pointer goes down during an active drag.
+     * Subclasses can override to add items to the multi-drag set.
+     */
+    protected void onPointerDownDuringDrag(float x, float y) {
+        // No-op in base class
     }
 
     /**

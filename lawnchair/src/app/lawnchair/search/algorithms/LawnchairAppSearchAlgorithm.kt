@@ -2,10 +2,13 @@ package app.lawnchair.search.algorithms
 
 import android.content.Context
 import android.os.Handler
+import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.search.adapter.SPACE
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.SearchTargetFactory
+import app.lawnchair.search.algorithms.data.Calculation
+import app.lawnchair.search.algorithms.data.calculator.Expressions
 import app.lawnchair.util.isDefaultLauncher
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherModel
@@ -103,6 +106,28 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
         }
 
         searchTargetFactory.createMarketSearchTarget(query)?.let { searchTargets.add(it) }
+
+        // Also check for math expressions
+        if (query.isNotBlank() && PreferenceManager.getInstance(context).searchResultCalculator.get()) {
+            val calculation = try {
+                val evaluated = Expressions().eval(query)
+                val rounded = evaluated.round(java.math.MathContext.DECIMAL64)
+                val formatted = rounded.stripTrailingZeros()
+                val abs = formatted.abs()
+                val threshold = java.math.BigDecimal("9999999999999999")
+                val result = if (abs > threshold) formatted.toString() else formatted.toPlainString()
+                Calculation(equation = query, result = result, isValid = true)
+            } catch (_: Exception) {
+                Calculation(equation = "", result = "", isValid = false)
+            }
+            if (calculation.isValid) {
+                val calcTarget = searchTargetFactory.createCalculatorTarget(calculation)
+                if (!searchTargets.isEmpty()) {
+                    searchTargets.add(searchTargetFactory.createHeaderTarget(SPACE))
+                }
+                searchTargets.add(calcTarget)
+            }
+        }
 
         setFirstItemQuickLaunch(searchTargets)
         val adapterItems = transformSearchResults(searchTargets)

@@ -30,16 +30,19 @@ import android.graphics.drawable.Drawable;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.AbstractFloatingView;
+import com.android.launcher3.CellLayout;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
+import com.android.launcher3.ShortcutAndWidgetContainer;
 import com.android.launcher3.accessibility.DragViewStateAnnouncer;
 import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.model.data.ItemInfo;
@@ -58,6 +61,8 @@ public class LauncherDragController extends DragController<Launcher> {
 
     /** Whether or not the drag operation is triggered by mouse right click. */
     private boolean mIsInMouseRightClick = false;
+
+    private final Rect mHitRect = new Rect();
 
     public LauncherDragController(Launcher launcher) {
         super(launcher);
@@ -257,6 +262,63 @@ public class LauncherDragController extends DragController<Launcher> {
             return true;
         }
         return super.endWithFlingAnimation();
+    }
+
+    @Override
+    protected void onPointerDownDuringDrag(float x, float y) {
+        if (mDragObject == null || mDragObject.dragInfo == null || mIsInPreDrag) return;
+
+        com.android.launcher3.Workspace workspace = mActivity.getWorkspace();
+        if (workspace == null) return;
+
+        // Convert drag-layer coordinates to workspace-local coordinates
+        int[] coords = new int[]{(int) x, (int) y};
+        mActivity.getDragLayer().mapCoordInSelfToDescendant(workspace, coords);
+
+        // Check all workspace pages for icons at the touch point
+        int pageCount = workspace.getPageCount();
+        for (int page = 0; page < pageCount; page++) {
+            CellLayout cellLayout = (CellLayout) workspace.getPageAt(page);
+            if (cellLayout == null) continue;
+            if (hitTestCellLayout(cellLayout, x, y)) return;
+        }
+
+        // Also check the hotseat
+        CellLayout hotseat = mActivity.getHotseat();
+        if (hotseat != null) {
+            hitTestCellLayout(hotseat, x, y);
+        }
+    }
+
+    private boolean hitTestCellLayout(CellLayout cellLayout, float x, float y) {
+        ViewGroup container = cellLayout.getShortcutsAndWidgets();
+        if (container == null) return false;
+
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            if (!(child instanceof DraggableView)
+                    || ((DraggableView) child).getViewType() != DraggableView.DRAGGABLE_ICON) {
+                continue;
+            }
+
+            mActivity.getDragLayer().getDescendantRectRelativeToSelf(child, mHitRect);
+            if (!mHitRect.contains((int) x, (int) y)) continue;
+
+            ItemInfo itemInfo = (ItemInfo) child.getTag();
+            if (itemInfo == null) continue;
+
+            if (itemInfo.id == mDragObject.dragInfo.id) continue;
+            if (mDragObject.additionalItems.stream().anyMatch(
+                    existing -> existing.id == itemInfo.id)) continue;
+
+            mDragObject.additionalItems.add(itemInfo.makeShallowCopy());
+            mDragObject.dragView.setMultiItemCount(mDragObject.additionalItems.size());
+
+            child.setVisibility(View.INVISIBLE);
+            child.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -2181,6 +2181,12 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             mapPointFromDropLayout(dropTargetLayout, mDragViewVisualCenter);
         }
 
+        // Place multi-drag items before the primary item's handling to avoid
+        // being skipped by early returns in the primary drop path.
+        if (d.isMultiDrag() && dropTargetLayout != null) {
+            placeAdditionalMultiDragItems(d, dropTargetLayout);
+        }
+
         boolean droppedOnOriginalCell = false;
 
         boolean snappedToNewPage = false;
@@ -3114,6 +3120,123 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     }
 
+    /**
+     * Places additional multi-drag items at available cells near the drop target layout.
+     */
+    private void placeAdditionalMultiDragItems(DragObject d, CellLayout dropTargetLayout) {
+        if (d.additionalItems.isEmpty()) return;
+
+        // Use the primary item's original cell as the anchor for placing additional items.
+        // This puts them around where the initial icon was picked up, not scattered at the
+        // arbitrary drop point.
+        CellLayout placeOnLayout = dropTargetLayout;
+        int placeContainer = mLauncher.isHotseatLayout(dropTargetLayout)
+                ? CONTAINER_HOTSEAT : CONTAINER_DESKTOP;
+        int placeScreenId = getCellLayoutId(dropTargetLayout);
+        float anchorX = mDragViewVisualCenter[0];
+        float anchorY = mDragViewVisualCenter[1];
+
+        if (mDragInfo != null) {
+            CellLayout originLayout = mDragInfo.container == CONTAINER_HOTSEAT
+                    ? mLauncher.getHotseat() : getScreenWithId(mDragInfo.screenId);
+            if (originLayout != null) {
+                Rect cellRect = new Rect();
+                originLayout.cellToRect(mDragInfo.cellX, mDragInfo.cellY,
+                        Math.max(mDragInfo.spanX, 1), Math.max(mDragInfo.spanY, 1), cellRect);
+                anchorX = cellRect.centerX();
+                anchorY = cellRect.centerY();
+                placeOnLayout = originLayout;
+                placeContainer = mDragInfo.container;
+                placeScreenId = mDragInfo.screenId;
+            }
+        }
+
+        int[] anchorCell = new int[2];
+        placeOnLayout.pointToCellExact((int) anchorX, (int) anchorY, anchorCell);
+
+        for (ItemInfo itemInfo : d.additionalItems) {
+            int spanX = Math.max(itemInfo.spanX, 1);
+            int spanY = Math.max(itemInfo.spanY, 1);
+
+            int[] targetCell = new int[]{-1, -1};
+            findCellInSpiral(targetCell, placeOnLayout,
+                    anchorCell[0], anchorCell[1], spanX, spanY);
+            if (targetCell[0] < 0) continue;
+
+            View view = getViewByItemId(itemInfo.id);
+            if (view == null) continue;
+
+            CellLayout oldParent = getParentCellLayoutForView(view);
+            if (oldParent != null) {
+                oldParent.removeView(view);
+            }
+
+            addInScreen(view, placeContainer, placeScreenId, targetCell[0], targetCell[1],
+                    spanX, spanY);
+            view.setVisibility(VISIBLE);
+
+            ItemInfo info = (ItemInfo) view.getTag();
+            info.cellX = targetCell[0];
+            info.cellY = targetCell[1];
+            info.screenId = placeScreenId;
+            info.container = placeContainer;
+            info.spanX = spanX;
+            info.spanY = spanY;
+
+            mLauncher.getModelWriter().modifyItemInDatabase(info, placeContainer, placeScreenId,
+                    targetCell[0], targetCell[1], spanX, spanY);
+            placeOnLayout.onDropChild(view);
+        }
+    }
+
+    private boolean findCellInSpiral(int[] out, CellLayout layout,
+            int anchorCellX, int anchorCellY, int spanX, int spanY) {
+        int countX = layout.getCountX();
+        int countY = layout.getCountY();
+        int maxDist = Math.max(countX, countY) + 1;
+        for (int ring = 0; ring <= maxDist; ring++) {
+            int y = anchorCellY - ring;
+            if (y >= 0 && y + spanY <= countY) {
+                for (int x = anchorCellX - ring; x <= anchorCellX + ring; x++) {
+                    if (x >= 0 && x + spanX <= countX
+                            && layout.isRegionVacant(x, y, spanX, spanY)) {
+                        out[0] = x; out[1] = y; return true;
+                    }
+                }
+            }
+            if (ring > 0) {
+                y = anchorCellY + ring;
+                if (y >= 0 && y + spanY <= countY) {
+                    for (int x = anchorCellX + ring; x >= anchorCellX - ring; x--) {
+                        if (x >= 0 && x + spanX <= countX
+                                && layout.isRegionVacant(x, y, spanX, spanY)) {
+                            out[0] = x; out[1] = y; return true;
+                        }
+                    }
+                }
+                int x = anchorCellX - ring;
+                if (x >= 0 && x + spanX <= countX) {
+                    for (y = anchorCellY - ring + 1; y <= anchorCellY + ring - 1; y++) {
+                        if (y >= 0 && y + spanY <= countY
+                                && layout.isRegionVacant(x, y, spanX, spanY)) {
+                            out[0] = x; out[1] = y; return true;
+                        }
+                    }
+                }
+                x = anchorCellX + ring;
+                if (x >= 0 && x + spanX <= countX) {
+                    for (y = anchorCellY - ring + 1; y <= anchorCellY + ring - 1; y++) {
+                        if (y >= 0 && y + spanY <= countY
+                                && layout.isRegionVacant(x, y, spanX, spanY)) {
+                            out[0] = x; out[1] = y; return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private Drawable createWidgetDrawable(ItemInfo widgetInfo, View layout) {
         int[] unScaledSize = estimateItemSize(widgetInfo);
         int visibility = layout.getVisibility();
@@ -3544,6 +3667,14 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         View cell = getViewByItemId(d.originalDragInfo.id);
         if (d.cancelled && cell != null) {
             cell.setVisibility(VISIBLE);
+        }
+        if (d.cancelled && !d.additionalItems.isEmpty()) {
+            for (int i = 0; i < d.additionalItems.size(); i++) {
+                View additionalView = getViewByItemId(d.additionalItems.get(i).id);
+                if (additionalView != null) {
+                    additionalView.setVisibility(VISIBLE);
+                }
+            }
         }
         mDragInfo = null;
     }

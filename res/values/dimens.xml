@@ -582,4 +582,8 @@
     <!-- App Title Pill -->
     <dimen name="app_title_pill_horizontal_padding">4dp</dimen>
     <dimen name="app_title_pill_round_rect_padding">2dp</dimen>
+
+    <!-- Multi-drag badge -->
+    <dimen name="multi_drag_badge_text_size">11sp</dimen>
+    <dimen name="multi_drag_badge_padding">6dp</dimen>
 </resources>

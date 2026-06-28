@@ -28,9 +28,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteReadOnlyDatabaseException
 import android.graphics.Bitmap
-import android.graphics.Bitmap.Config.HARDWARE
-import android.graphics.BitmapFactory
-import android.graphics.BitmapFactory.Options
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
@@ -71,6 +68,8 @@ constructor(
     inMemoryCache: Boolean,
     val iconProvider: IconProvider = IconProvider(context),
 ) {
+    @JvmField
+    protected val iconFileStore = IconFileStore(context)
     class CacheEntry {
         @JvmField var bitmap: BitmapInfo = BitmapInfo.LOW_RES_INFO
         @JvmField var title: CharSequence = ""
@@ -135,6 +134,7 @@ constructor(
             userFlagOpMap.clear()
             iconDb.clear()
             iconDb.close()
+            iconFileStore.deleteAll()
             iconDb = IconDB(context, dbFileName, iconPixelSize)
             cache.clear()
         } catch (e: SQLiteReadOnlyDatabaseException) {
@@ -170,13 +170,15 @@ constructor(
     private fun removeFromMemCacheLocked(packageName: String, user: UserHandle) =
         cache.keys.removeIf { it.componentName.packageName == packageName && it.user == user }
 
-    /** Removes the entries related to the given package in memory and persistent DB. */
+    /** Removes the entries related to the given package in memory and persistent storage. */
     @Synchronized
     fun removeIconsForPkg(packageName: String, user: UserHandle) {
         removeFromMemCacheLocked(packageName, user)
+        val userSerial = getSerialNumberForUser(user)
+        iconFileStore.deleteAllForPackage(packageName, userSerial)
         iconDb.delete(
             "$COLUMN_COMPONENT LIKE ? AND $COLUMN_USER = ?",
-            arrayOf("$packageName/%", getSerialNumberForUser(user).toString()),
+            arrayOf("$packageName/%", userSerial.toString()),
         )
     }
 
@@ -547,28 +549,20 @@ constructor(
 
         if (!lookupFlags.useLowRes()) {
             try {
-                val data: ByteArray = c.getBlob(INDEX_ICON) ?: return false
-                entry.bitmap =
-                    BitmapInfo.of(
-                        BitmapFactory.decodeByteArray(
-                            data,
-                            0,
-                            data.size,
-                            Options().apply { inPreferredConfig = HARDWARE },
-                        )!!,
-                        entry.bitmap.color,
-                    )
+                val userSerial = getSerialNumberForUser(cacheKey.user)
+                val bitmap = iconFileStore.loadIcon(cacheKey.componentName, userSerial) ?: return false
+                entry.bitmap = BitmapInfo.of(bitmap, entry.bitmap.color)
             } catch (e: Exception) {
                 return false
             }
 
             if (!extendibleThemeManager() || lookupFlags.hasThemeIcon()) {
-                // Always set a non-null theme bitmap if theming was requested
                 entry.bitmap.themedBitmap = ThemedBitmap.NOT_SUPPORTED
 
                 iconFactory.use { factory ->
                     val themeController = factory.themeController
-                    val monoIconData = c.getBlob(INDEX_MONO_ICON)
+                    val monoIconData =
+                        iconFileStore.loadMonoData(cacheKey.componentName, getSerialNumberForUser(cacheKey.user))
                     if (themeController != null && monoIconData != null) {
                         entry.bitmap.themedBitmap =
                             themeController.decode(
@@ -595,19 +589,17 @@ constructor(
         userSerial: Long,
         freshnessId: String,
     ) {
-        val values = ContentValues()
         if (bitmapInfo.canPersist()) {
-            values.put(COLUMN_ICON, GraphicsUtils.flattenBitmap(bitmapInfo.icon))
-            values.put(COLUMN_MONO_ICON, bitmapInfo.themedBitmap?.serialize())
-        } else {
-            values.put(COLUMN_ICON, null as ByteArray?)
-            values.put(COLUMN_MONO_ICON, null as ByteArray?)
+            iconFileStore.saveIcon(key, userSerial, bitmapInfo.icon)
+            bitmapInfo.themedBitmap?.serialize()?.let { monoData ->
+                iconFileStore.saveMonoData(key, userSerial, monoData)
+            }
         }
 
+        val values = ContentValues()
         values.put(COLUMN_ICON_COLOR, bitmapInfo.color)
         values.put(COLUMN_FLAGS, bitmapInfo.flags)
         values.put(COLUMN_LABEL, label.toString())
-
         values.put(COLUMN_COMPONENT, key.flattenToString())
         values.put(COLUMN_USER, userSerial)
         values.put(COLUMN_FRESHNESS_ID, freshnessId)
@@ -667,7 +659,8 @@ constructor(
             ComponentKey(ComponentName(packageName, packageName + EMPTY_CLASS_NAME), user)
 
         // Ensures themed bitmaps in the icon cache are invalidated
-        @JvmField val RELEASE_VERSION = if (Flags.enableLauncherIconShapes()) 11 else 10
+        // Version 12: storage-first icon caching (files instead of SQLite BLOBs)
+        @JvmField val RELEASE_VERSION = if (Flags.enableLauncherIconShapes()) 12 else 11
 
         @JvmField val TABLE_NAME = "icons"
         @JvmField val COLUMN_ROWID = "rowid"
@@ -685,32 +678,25 @@ constructor(
             arrayOf(COLUMN_COMPONENT, COLUMN_LABEL, COLUMN_ICON_COLOR, COLUMN_FLAGS)
 
         @JvmField
-        val COLUMNS_HIGH_RES_NO_THEME =
-            COLUMNS_LOW_RES.copyOf(COLUMNS_LOW_RES.size + 2).apply {
-                this[size - 1] = COLUMN_ICON
-                this[size - 2] = COLUMN_FRESHNESS_ID
+        val COLUMNS_HIGH_RES_META =
+            COLUMNS_LOW_RES.copyOf(COLUMNS_LOW_RES.size + 1).apply {
+                this[size - 1] = COLUMN_FRESHNESS_ID
             }
 
-        @JvmField
-        val COLUMNS_HIGH_RES =
-            COLUMNS_HIGH_RES_NO_THEME.copyOf(COLUMNS_HIGH_RES_NO_THEME.size + 1).apply {
-                this[size - 1] = COLUMN_MONO_ICON
-            }
+        @Deprecated("Icon is now stored via IconFileStore, not as a BLOB")
+        @JvmField val INDEX_ICON = -1
 
-        @JvmField val INDEX_TITLE = COLUMNS_HIGH_RES.indexOf(COLUMN_LABEL)
-        @JvmField val INDEX_COLOR = COLUMNS_HIGH_RES.indexOf(COLUMN_ICON_COLOR)
-        @JvmField val INDEX_FLAGS = COLUMNS_HIGH_RES.indexOf(COLUMN_FLAGS)
-        @JvmField val INDEX_ICON = COLUMNS_HIGH_RES.indexOf(COLUMN_ICON)
-        @JvmField val INDEX_MONO_ICON = COLUMNS_HIGH_RES.indexOf(COLUMN_MONO_ICON)
-        @JvmField val INDEX_FRESHNESS_ID = COLUMNS_HIGH_RES.indexOf(COLUMN_FRESHNESS_ID)
+        @Deprecated("Mono icon is now stored via IconFileStore, not as a BLOB")
+        @JvmField val INDEX_MONO_ICON = -1
+
+        @JvmField val INDEX_TITLE = COLUMNS_HIGH_RES_META.indexOf(COLUMN_LABEL)
+        @JvmField val INDEX_COLOR = COLUMNS_HIGH_RES_META.indexOf(COLUMN_ICON_COLOR)
+        @JvmField val INDEX_FLAGS = COLUMNS_HIGH_RES_META.indexOf(COLUMN_FLAGS)
+        @JvmField val INDEX_FRESHNESS_ID = COLUMNS_HIGH_RES_META.indexOf(COLUMN_FRESHNESS_ID)
 
         @JvmStatic
         fun CacheLookupFlag.toLookupColumns() =
-            when {
-                useLowRes() -> COLUMNS_LOW_RES
-                extendibleThemeManager() && !hasThemeIcon() -> COLUMNS_HIGH_RES_NO_THEME
-                else -> COLUMNS_HIGH_RES
-            }
+            if (useLowRes()) COLUMNS_LOW_RES else COLUMNS_HIGH_RES_META
 
         @JvmStatic
         protected fun BitmapInfo.downSampleToLookupFlag(flag: CacheLookupFlag) =

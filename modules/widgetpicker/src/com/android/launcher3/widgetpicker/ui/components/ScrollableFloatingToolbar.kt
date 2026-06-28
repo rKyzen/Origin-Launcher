@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
  * - compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt
  * - compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/TabRow.kt
  *
- * This design is suitable for 2-3 tabs.
+ * This design is suitable for 2-4 tabs.
  *
  * @param tabs A list of tabs (typically [LeadingIconToolbarTab]) that can be arranged in a
  *   scrollable row.
@@ -82,7 +82,7 @@ fun ScrollableFloatingToolbar(
     minTabWidth: Dp = ScrollableFloatingToolbarDefaults.minTabWidth,
     shadowElevation: Dp = ScrollableFloatingToolbarDefaults.shadowElevation,
 ) {
-    check(tabs.size in 2..3) { "Unexpected number of tabs: ${tabs.size}. Suitable for 2-3 tabs." }
+    check(tabs.size in 2..4) { "Unexpected number of tabs: ${tabs.size}. Suitable for 2-4 tabs." }
 
     val scrollState = rememberScrollState()
 

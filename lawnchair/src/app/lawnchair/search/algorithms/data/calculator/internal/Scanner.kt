@@ -23,11 +23,27 @@ import app.lawnchair.search.algorithms.data.calculator.internal.TokenType.RIGHT_
 import app.lawnchair.search.algorithms.data.calculator.internal.TokenType.SLASH
 import app.lawnchair.search.algorithms.data.calculator.internal.TokenType.SQUARE_ROOT
 import app.lawnchair.search.algorithms.data.calculator.internal.TokenType.STAR
+import java.math.BigDecimal
 import java.math.MathContext
 
 private fun invalidToken(c: Char) {
     throw ExpressionException("Invalid token '$c'")
 }
+
+private val superscriptMap = mapOf(
+    '\u2070' to 0, // ⁰
+    '\u00B9' to 1, // ¹
+    '\u00B2' to 2, // ²
+    '\u00B3' to 3, // ³
+    '\u2074' to 4, // ⁴
+    '\u2075' to 5, // ⁵
+    '\u2076' to 6, // ⁶
+    '\u2077' to 7, // ⁷
+    '\u2078' to 8, // ⁸
+    '\u2079' to 9, // ⁹
+)
+
+private fun isSuperscript(c: Char) = superscriptMap.containsKey(c)
 
 internal class Scanner(
     private val source: String,
@@ -97,6 +113,7 @@ internal class Scanner(
                 when {
                     c.isDigit() -> number()
                     c.isAlpha() -> identifier()
+                    isSuperscript(c) -> superscriptNumber(c)
                     else -> invalidToken(c)
                 }
             }
@@ -130,6 +147,20 @@ internal class Scanner(
             .toBigDecimal(mathContext)
 
         addToken(NUMBER, value)
+    }
+
+    private fun superscriptNumber(first: Char) {
+        addToken(EXPONENT)
+        start = current
+        val digits = mutableListOf<Int>()
+        digits.add(superscriptMap[first]!!)
+        while (isSuperscript(peek())) {
+            digits.add(superscriptMap[advance()]!!)
+        }
+        val value = digits.fold(BigDecimal.ZERO) { acc, d ->
+            acc.multiply(BigDecimal.TEN).add(BigDecimal.valueOf(d.toLong()))
+        }
+        tokens.add(Token(NUMBER, value.toPlainString(), value))
     }
 
     private fun identifier() {

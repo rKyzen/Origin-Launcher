@@ -18,9 +18,11 @@ package com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -50,6 +52,8 @@ import com.android.launcher3.widgetpicker.ui.components.ScrollableFloatingToolba
 import com.android.launcher3.widgetpicker.ui.components.SinglePaneLayout
 import com.android.launcher3.widgetpicker.ui.components.WidgetAppHeaderStyle
 import com.android.launcher3.widgetpicker.ui.components.WidgetAppsList
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 import com.android.launcher3.widgetpicker.ui.components.widgetPickerTestTag
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.APPS_TAB_INDEX
 import com.android.launcher3.widgetpicker.ui.fullcatalog.screens.landing.LandingScreenSinglePaneDimens.DEFAULT_SELECTED_TAB
@@ -78,6 +82,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LandingScreenSinglePane(
     searchBarContent: @Composable () -> Unit,
+    recentWidgetsContent: @Composable () -> Unit,
+    recentWidgetsCount: Int,
     featuredWidgetsContent: @Composable () -> Unit,
     widgetAppIconsState: AppIconsState,
     browseWidgetsState: BrowseWidgetsState.Data,
@@ -128,7 +134,6 @@ fun LandingScreenSinglePane(
                 when (pageIndex) {
                     FEATURED_TAB_INDEX -> {
                         Box(
-                            contentAlignment = Alignment.Center,
                             modifier =
                                 Modifier.fillMaxSize()
                                     .clip(contentShape)
@@ -136,7 +141,22 @@ fun LandingScreenSinglePane(
                                     .verticalScroll(rememberScrollState())
                                     .padding(bottom = contentBottomEdgeSpacing),
                         ) {
-                            featuredWidgetsContent()
+                            Column {
+                                if (recentWidgetsCount > 0) {
+                                    Text(
+                                        text = stringResource(R.string.recently_used_label),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = WidgetPickerTheme.colors.listHeaderSubTitle,
+                                    )
+                                    recentWidgetsContent()
+                                }
+                                featuredWidgetsContent()
+                            }
                         }
                     }
 

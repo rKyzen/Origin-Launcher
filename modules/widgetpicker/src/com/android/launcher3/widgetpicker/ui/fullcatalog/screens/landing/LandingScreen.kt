@@ -69,6 +69,8 @@ fun LandingScreen(
         LandingScreen(
             isCompact = isCompact,
             searchBarContent = searchBar,
+            recentWidgetsState = viewModel.recentWidgetsState,
+            recentWidgetsPreviewsState = viewModel.recentWidgetsPreviewsState,
             featuredWidgetsState = viewModel.featuredWidgetsState,
             featuredWidgetPreviewsState = viewModel.featuredWidgetPreviewsState,
             widgetAppIconsState = viewModel.appIconsState,
@@ -89,6 +91,8 @@ fun LandingScreen(
 private fun LandingScreen(
     isCompact: Boolean,
     searchBarContent: @Composable () -> Unit,
+    recentWidgetsState: RecentWidgetsState,
+    recentWidgetsPreviewsState: PreviewsState,
     featuredWidgetsState: FeaturedWidgetsState,
     featuredWidgetPreviewsState: PreviewsState,
     widgetAppIconsState: AppIconsState,
@@ -102,6 +106,19 @@ private fun LandingScreen(
     onWidgetInteraction: (WidgetInteractionInfo) -> Unit,
     showDragShadow: Boolean,
 ) {
+    val recentWidgetsContent: @Composable () -> Unit = {
+        if (recentWidgetsState.sizeGroups.isNotEmpty()) {
+            WidgetsGrid(
+                modifier = Modifier.fillMaxSize().wrapContentSize(),
+                widgetSizeGroups = recentWidgetsState.sizeGroups,
+                showAllWidgetDetails = false,
+                previews = recentWidgetsPreviewsState.previews,
+                onWidgetInteraction = onWidgetInteraction,
+                showDragShadow = showDragShadow,
+            )
+        }
+    }
+
     val featuredWidgetsContent: @Composable () -> Unit = {
         WidgetsGrid(
             modifier = Modifier.fillMaxSize().wrapContentSize(),
@@ -118,6 +135,8 @@ private fun LandingScreen(
         isCompact ->
             LandingScreenSinglePane(
                 searchBarContent = searchBarContent,
+                recentWidgetsContent = recentWidgetsContent,
+                recentWidgetsCount = recentWidgetsState.widgetsCount,
                 featuredWidgetsContent = featuredWidgetsContent,
                 widgetAppIconsState = widgetAppIconsState,
                 browseWidgetsState = browseWidgetsState,
@@ -134,6 +153,8 @@ private fun LandingScreen(
         else ->
             LandingScreenTwoPane(
                 searchBar = searchBarContent,
+                recentWidgetsContent = recentWidgetsContent,
+                recentWidgetsCount = recentWidgetsState.widgetsCount,
                 featuredWidgets = featuredWidgetsContent,
                 featuredWidgetsCount = featuredWidgetsState.widgetsCount,
                 widgetAppIconsState = widgetAppIconsState,

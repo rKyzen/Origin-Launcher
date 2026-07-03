@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.android.launcher3.widgetpicker.WidgetPickerSingleton
+import com.android.launcher3.widgetpicker.data.repository.WidgetRecentsStore
 import com.android.launcher3.widgetpicker.domain.interactor.WidgetAppIconsInteractor
 import com.android.launcher3.widgetpicker.domain.interactor.WidgetsInteractor
 import com.android.launcher3.widgetpicker.shared.model.WidgetAppIcon
@@ -47,7 +48,8 @@ import kotlinx.coroutines.launch
  */
 class LandingScreenViewModel @AssistedInject constructor(
     private val widgetsInteractor: WidgetsInteractor,
-    private val widgetAppIconsInteractor: WidgetAppIconsInteractor
+    private val widgetAppIconsInteractor: WidgetAppIconsInteractor,
+    private val widgetRecentsStore: WidgetRecentsStore,
 ) : ViewModel {
     override suspend fun onInit() {
         coroutineScope {
@@ -55,6 +57,7 @@ class LandingScreenViewModel @AssistedInject constructor(
             launch { initBrowseWidgetPreviews() }
             launch { initWorkWidgetPreviews() }
             launch { initFeaturedWidgets() }
+            launch { initRecentWidgets() }
             launch { initAppIcons() }
 
             awaitCancellation()
@@ -119,6 +122,14 @@ class LandingScreenViewModel @AssistedInject constructor(
 
     /** Preview information about the widgets shown in the featured section. */
     var featuredWidgetPreviewsState by mutableStateOf(PreviewsState())
+        private set
+
+    /** Recently used widgets shown at the top of the landing screen. */
+    var recentWidgetsState by mutableStateOf(RecentWidgetsState())
+        private set
+
+    /** Preview information about the recently used widgets. */
+    var recentWidgetsPreviewsState by mutableStateOf(PreviewsState())
         private set
 
     private suspend fun initBrowseWidgets() {
@@ -189,6 +200,43 @@ class LandingScreenViewModel @AssistedInject constructor(
                     res.id to widgetsInteractor.getWidgetPreview(res.id)
                 })
         }
+        awaitCancellation()
+    }
+
+    private suspend fun initRecentWidgets() {
+        val allWidgetsMap = snapshotFlow { browseWidgetsState }
+        allWidgetsMap.collect { state ->
+            if (state is BrowseWidgetsState.Data) {
+                val widgetMap = state.personalWidgetApps.flatMap { app ->
+                    app.widgetSizeGroups.flatMap { it.widgets }
+                }.associateBy { it.id }
+                val recentIds = widgetRecentsStore.getRecentWidgetIds()
+                val recentWidgets = recentIds.mapNotNull { widgetMap[it] }
+                if (recentWidgets.isNotEmpty()) {
+                    recentWidgetsState = RecentWidgetsState(
+                        sizeGroups = recentWidgets.groupBy {
+                            Pair(it.sizeInfo.containerWidthPx, it.sizeInfo.containerHeightPx)
+                        }.map { (size, widgets) ->
+                            WidgetSizeGroup(
+                                previewContainerWidthPx = size.first,
+                                previewContainerHeightPx = size.second,
+                                widgets = widgets
+                            )
+                        },
+                        widgetsCount = recentWidgets.size,
+                    )
+                    recentWidgetsPreviewsState = PreviewsState(
+                        recentWidgets.associate {
+                            it.id to widgetsInteractor.getWidgetPreview(it.id)
+                        }
+                    )
+                } else {
+                    recentWidgetsState = RecentWidgetsState()
+                    recentWidgetsPreviewsState = PreviewsState()
+                }
+            }
+        }
+
         awaitCancellation()
     }
 
@@ -288,6 +336,18 @@ data class FeaturedWidgetsState(
 @Immutable
 data class PreviewsState(
     val previews: Map<WidgetId, WidgetPreview> = emptyMap()
+)
+
+/**
+ * Represents widgets data to be shown in the "recently used" section.
+ * @param sizeGroups groups holding recently used widgets of similar sizes.
+ * @param widgetsCount total count of recently used widgets.
+ */
+@Stable
+@Immutable
+data class RecentWidgetsState(
+    val sizeGroups: List<WidgetSizeGroup> = emptyList(),
+    val widgetsCount: Int = 0,
 )
 
 /**

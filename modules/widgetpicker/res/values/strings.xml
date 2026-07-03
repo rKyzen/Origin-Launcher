@@ -43,6 +43,9 @@
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
     <string name="widget_tap_to_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
 
+    <!-- Label shown above recently used widgets in the widget picker. [CHAR_LIMIT=25] -->
+    <string name="recently_used_label">Recently used</string>
+
     <!-- Tab / list header label. A user can tap this to access recommended (or featured) widgets.
      [CHAR_LIMIT=25]  -->
     <string name="featured_widgets_tab_label">Featured</string>

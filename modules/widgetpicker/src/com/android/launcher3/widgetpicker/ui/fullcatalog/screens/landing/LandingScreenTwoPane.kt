@@ -20,7 +20,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -38,6 +44,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -80,6 +87,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LandingScreenTwoPane(
     searchBar: @Composable () -> Unit,
+    recentWidgetsContent: @Composable () -> Unit,
+    recentWidgetsCount: Int,
     featuredWidgets: @Composable () -> Unit,
     featuredWidgetsCount: Int,
     widgetAppIconsState: AppIconsState,
@@ -159,6 +168,8 @@ fun LandingScreenTwoPane(
                 RightPaneContent(
                     pagerState = pagerState,
                     isFeaturedSectionSelected = isFeaturedSectionShowing,
+                    recentWidgetsContent = recentWidgetsContent,
+                    recentWidgetsCount = recentWidgetsCount,
                     featuredWidgets = featuredWidgets,
                     originWidgetApps = originWidgetApps,
                     thirdPartyWidgetApps = thirdPartyWidgetApps,
@@ -216,6 +227,8 @@ private fun rightPaneTitle(
 private fun RightPaneContent(
     pagerState: PagerState,
     isFeaturedSectionSelected: Boolean,
+    recentWidgetsContent: @Composable () -> Unit,
+    recentWidgetsCount: Int,
     featuredWidgets: @Composable () -> Unit,
     originWidgetApps: List<DisplayableWidgetApp>,
     thirdPartyWidgetApps: List<DisplayableWidgetApp>,
@@ -228,7 +241,28 @@ private fun RightPaneContent(
     showDragShadow: Boolean,
 ) {
     when {
-        isFeaturedSectionSelected -> featuredWidgets()
+        isFeaturedSectionSelected -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                if (recentWidgetsCount > 0) {
+                    Text(
+                        text = stringResource(R.string.recently_used_label),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = WidgetPickerTheme.colors.listHeaderSubTitle,
+                    )
+                    recentWidgetsContent()
+                }
+                featuredWidgets()
+            }
+        }
 
         pagerState.currentPage == ORIGIN_TAB_INDEX -> {
             selectedPersonalWidgetAppId?.let {

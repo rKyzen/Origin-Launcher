@@ -20,12 +20,14 @@ import com.android.launcher3.compose.core.widgetpicker.WidgetPickerComposeWrappe
 import com.android.launcher3.widgetpicker.WidgetPickerComponent
 import com.android.launcher3.widgetpicker.WidgetPickerComposeWrapperImpl
 import com.android.launcher3.widgetpicker.data.repository.WidgetAppIconsRepository
+import com.android.launcher3.widgetpicker.data.repository.WidgetRecentsStore
 import com.android.launcher3.widgetpicker.data.repository.WidgetUsersRepository
 import com.android.launcher3.widgetpicker.data.repository.WidgetsRepository
 import com.android.launcher3.widgetpicker.datasource.ConfigResourceFeaturedWidgetsDataSource
 import com.android.launcher3.widgetpicker.datasource.FeaturedWidgetsDataSource
 import com.android.launcher3.widgetpicker.datasource.InMemoryWidgetSearchAlgorithm
 import com.android.launcher3.widgetpicker.datasource.WidgetsSearchAlgorithm
+import com.android.launcher3.widgetpicker.repository.WidgetRecentsStoreImpl
 import com.android.launcher3.widgetpicker.repository.WidgetsRepositoryImpl
 import com.android.launcher3.widgetpicker.repository.WidgetAppIconsRepositoryImpl
 import com.android.launcher3.widgetpicker.repository.WidgetUsersRepositoryImpl
@@ -60,4 +62,9 @@ interface LauncherWidgetPickerModule {
     fun bindWidgetsSearchAlgorithm(
         impl: InMemoryWidgetSearchAlgorithm
     ): WidgetsSearchAlgorithm
+
+    @Binds
+    fun bindWidgetRecentsStore(
+        impl: WidgetRecentsStoreImpl
+    ): WidgetRecentsStore
 }

@@ -33,7 +33,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -86,6 +87,16 @@ fun WidgetPreview(
     val interactionSource = remember { MutableInteractionSource() }
     val haptic = LocalHapticFeedback.current
 
+    val ctx = LocalContext.current
+    val label = remember(widgetInfo) {
+        when (widgetInfo) {
+            is WidgetInfo.AppWidgetInfo ->
+                widgetInfo.appWidgetProviderInfo.loadLabel(ctx.packageManager).toString()
+            is WidgetInfo.ShortcutInfo ->
+                widgetInfo.launcherActivityInfo.label.toString()
+        }
+    }
+
     val widgetRadius = dimensionResource(android.R.dimen.system_app_widget_background_radius)
 
     val density = LocalDensity.current
@@ -107,7 +118,11 @@ fun WidgetPreview(
     ) {
         when (preview) {
             is WidgetPreview.PlaceholderWidgetPreview ->
-                PlaceholderWidgetPreview(size = containerSize, widgetRadius = widgetRadius)
+                PlaceholderWidgetPreview(
+                    size = containerSize,
+                    widgetRadius = widgetRadius,
+                    label = label,
+                )
 
             is WidgetPreview.BitmapWidgetPreview ->
                 BitmapWidgetPreview(
@@ -147,7 +162,7 @@ fun WidgetPreview(
 }
 
 @Composable
-private fun PlaceholderWidgetPreview(size: DpSize, widgetRadius: Dp) {
+private fun PlaceholderWidgetPreview(size: DpSize, widgetRadius: Dp, label: String) {
     Box(
         contentAlignment = Alignment.Center,
         modifier =
@@ -158,7 +173,12 @@ private fun PlaceholderWidgetPreview(size: DpSize, widgetRadius: Dp) {
                     shape = RoundedCornerShape(widgetRadius),
                 ),
     ) {
-        CircularProgressIndicator(color = WidgetPickerTheme.colors.widgetPlaceholderContent)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = WidgetPickerTheme.colors.widgetPlaceholderContent,
+            maxLines = 2,
+        )
     }
 }
 

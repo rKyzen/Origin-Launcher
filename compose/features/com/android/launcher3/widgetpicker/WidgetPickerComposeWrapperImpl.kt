@@ -35,12 +35,15 @@ import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.widgetpicker.WidgetPickerConfig.Companion.EXTRA_IS_PENDING_WIDGET_DRAG
 import com.android.launcher3.widgetpicker.data.repository.WidgetAppIconsRepository
+import com.android.launcher3.widgetpicker.data.repository.WidgetRecentsStore
 import com.android.launcher3.widgetpicker.data.repository.WidgetUsersRepository
 import com.android.launcher3.widgetpicker.data.repository.WidgetsRepository
 import com.android.launcher3.widgetpicker.listeners.WidgetPickerAddItemListener
 import com.android.launcher3.widgetpicker.listeners.WidgetPickerDragItemListener
 import com.android.launcher3.widgetpicker.shared.model.HostConstraint
 import com.android.launcher3.widgetpicker.shared.model.WidgetHostInfo
+import com.android.launcher3.widgetpicker.shared.model.WidgetId
+import com.android.launcher3.widgetpicker.shared.model.WidgetInfo
 import com.android.launcher3.widgetpicker.shared.model.isAppWidget
 import com.android.launcher3.widgetpicker.theme.darkWidgetPickerColors
 import com.android.launcher3.widgetpicker.theme.lightWidgetPickerColors
@@ -65,6 +68,7 @@ constructor(
     private val widgetsRepository: WidgetsRepository,
     private val widgetUsersRepository: WidgetUsersRepository,
     private val widgetAppIconsRepository: WidgetAppIconsRepository,
+    private val widgetRecentsStore: WidgetRecentsStore,
     @BackgroundContext private val backgroundContext: CoroutineContext,
     @ApplicationContext private val appContext: Context,
     private val apiWrapper: ApiWrapper,
@@ -75,7 +79,7 @@ constructor(
         widgetPickerConfig: WidgetPickerConfig,
     ) {
         val widgetPickerComponent = newWidgetPickerComponent(widgetPickerConfig)
-        val callbacks = activity.buildEventListeners(widgetPickerConfig, apiWrapper)
+        val callbacks = activity.buildEventListeners(widgetPickerConfig, apiWrapper, widgetRecentsStore)
 
         val fullWidgetsCatalog = widgetPickerComponent.getFullWidgetsCatalog()
         val composeView = ComposeFacade.initComposeView(activity.asContext()) as ComposeView
@@ -151,6 +155,7 @@ constructor(
         private fun WidgetPickerActivity.buildEventListeners(
             widgetPickerConfig: WidgetPickerConfig,
             apiWrapper: ApiWrapper,
+            widgetRecentsStore: WidgetRecentsStore,
         ) =
             object : WidgetPickerEventListeners {
                 override fun onClose() {
@@ -158,6 +163,9 @@ constructor(
                 }
 
                 override fun onWidgetInteraction(widgetInteractionInfo: WidgetInteractionInfo) {
+                    widgetInteractionInfo.toWidgetId()?.let { widgetId ->
+                        widgetRecentsStore.addRecentWidget(widgetId)
+                    }
                     if (widgetPickerConfig.isForHomeScreen) {
                         handleWidgetInteractionForHomeScreen(widgetInteractionInfo, apiWrapper)
                     } else {
@@ -165,6 +173,23 @@ constructor(
                     }
                 }
             }
+
+        private fun WidgetInteractionInfo.toWidgetId(): WidgetId? {
+            val wi = when (this) {
+                is WidgetInteractionInfo.WidgetDragInfo -> widgetInfo
+                is WidgetInteractionInfo.WidgetAddInfo -> widgetInfo
+            }
+            return when (wi) {
+                is WidgetInfo.AppWidgetInfo -> {
+                    val info = wi.appWidgetProviderInfo
+                    WidgetId(componentName = info.provider, userHandle = info.profile)
+                }
+                is WidgetInfo.ShortcutInfo -> {
+                    val info = wi.launcherActivityInfo
+                    WidgetId(componentName = info.componentName, userHandle = info.user)
+                }
+            }
+        }
 
         /**
          * Handles communication with the home screen about the "add" and "drag" interactions on
@@ -198,13 +223,22 @@ constructor(
                 interactionListener,
                 HOME_SCREEN_WIDGET_INTERACTION_REASON_STRING,
             )
-            startActivity(
-                /*intent=*/ Intent(Intent.ACTION_MAIN)
-                    .addCategory(Intent.CATEGORY_HOME)
-                    .setPackage(packageName)
-                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                /*options=*/ apiWrapper.createFadeOutAnimOptions().toBundle(),
-            )
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_HOME)
+                        .setPackage(packageName)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    apiWrapper.createFadeOutAnimOptions().toBundle(),
+                )
+            } catch (e: SecurityException) {
+                startActivity(
+                    Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_HOME)
+                        .setPackage(packageName)
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            }
             finish()
         }
 

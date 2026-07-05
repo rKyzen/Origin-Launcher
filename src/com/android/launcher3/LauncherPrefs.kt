@@ -317,6 +317,8 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         val RECONFIGURABLE_WIDGET_EDUCATION_TIP_SEEN =
             backedUpItem("launcher.reconfigurable_widget_education_tip_seen", false)
 
+        @JvmField val APP_ICON_SPAN_OVERRIDES = backedUpItem("app_icon_span_overrides", "")
+
         @JvmStatic
         fun <T> backedUpItem(
             sharedPrefKey: String,

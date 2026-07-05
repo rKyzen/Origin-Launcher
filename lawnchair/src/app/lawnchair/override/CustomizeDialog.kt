@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,7 +50,9 @@ import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherState
 import com.android.launcher3.R
 import com.android.launcher3.util.ComponentKey
+import com.android.launcher3.LauncherPrefs
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import org.json.JSONObject
 
 @Composable
 fun CustomizeDialog(
@@ -147,6 +150,22 @@ fun CustomizeAppDialog(
     }
     val launcherAppState = LauncherAppState.getInstance(context)
 
+    fun readAppIconSpan(): Int {
+        val json = LauncherPrefs.get(context).get(LauncherPrefs.APP_ICON_SPAN_OVERRIDES)
+        if (json.isEmpty()) return 1
+        return try { JSONObject(json).optInt(componentKey.toString(), 1) } catch (_: Exception) { 1 }
+    }
+
+    var appIconSpan by remember { mutableStateOf(readAppIconSpan()) }
+    var pendingReload by remember { mutableStateOf(false) }
+
+    LaunchedEffect(pendingReload) {
+        if (pendingReload) {
+            pendingReload = false
+            launcherAppState.model.forceReload()
+        }
+    }
+
     val route = SelectIcon(componentKey.toString())
 
     Log.d("CustomizeDialog", route.toString())
@@ -189,6 +208,27 @@ fun CustomizeAppDialog(
                         val newSet = hiddenApps.toMutableSet()
                         if (newValue) newSet.add(stringKey) else newSet.remove(stringKey)
                         adapter.onChange(newSet)
+                    },
+                )
+            }
+        }
+
+        PreferenceGroup {
+            Item {
+                SwitchPreference(
+                    checked = appIconSpan >= 2,
+                    label = stringResource(id = R.string.enlarge_icon_2x2),
+                    onCheckedChange = { newValue ->
+                        appIconSpan = if (newValue) 2 else 1
+                        val currentJson = LauncherPrefs.get(context).get(LauncherPrefs.APP_ICON_SPAN_OVERRIDES)
+                        val overrides = try { JSONObject(currentJson) } catch (_: Exception) { JSONObject() }
+                        if (newValue) {
+                            overrides.put(componentKey.toString(), 2)
+                        } else {
+                            overrides.remove(componentKey.toString())
+                        }
+                        LauncherPrefs.get(context).putSync(LauncherPrefs.APP_ICON_SPAN_OVERRIDES to overrides.toString())
+                        pendingReload = true
                     },
                 )
             }

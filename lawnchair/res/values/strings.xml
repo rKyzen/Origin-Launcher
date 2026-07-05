@@ -492,6 +492,11 @@
     <string name="smartspace_torch">Flashlight status</string>
     <string name="smartspace_now_playing">Now Playing</string>
     <string name="smartspace_onboarding">Onboarding</string>
+    <string name="smartspace_screen_time">Screen time</string>
+
+    <!-- Screen time strings -->
+    <string name="screen_time_today">Today</string>
+    <string name="screen_time_no_data">No data</string>
 
     <!-- Torch strings -->
     <string name="torch_status_on">Flashlight on</string>
@@ -1038,4 +1043,5 @@
     <string name="widgets_standard_description">Show widgets from all installed apps</string>
     <string name="widgets_origin">Origin</string>
     <string name="widgets_origin_description">Show only Origin\'s own widgets</string>
+    <string name="enlarge_icon_2x2">2×2 icon</string>
 </resources>

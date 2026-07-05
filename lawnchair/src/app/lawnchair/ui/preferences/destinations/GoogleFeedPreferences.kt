@@ -7,9 +7,13 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,6 +30,7 @@ import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
 import app.lawnchair.smartspace.model.Smartspacer
+import app.lawnchair.smartspace.provider.ScreenTimeProvider
 import app.lawnchair.smartspace.provider.SmartspaceProvider
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NotificationDotsPreference
@@ -129,7 +134,37 @@ private fun LawnchairSmartspaceSettings(
                 }
         }
         SmartspaceDateAndTimePreferences()
+        ScreenTimeStatsSection(smartspaceProvider)
         NotificationDotsSection()
+    }
+}
+
+@Composable
+private fun ScreenTimeStatsSection(
+    smartspaceProvider: SmartspaceProvider,
+    modifier: Modifier = Modifier,
+) {
+    val screenTimeProvider = remember {
+        smartspaceProvider.dataSources.filterIsInstance<ScreenTimeProvider>().firstOrNull()
+    }
+    val targets by smartspaceProvider.targets.collectAsState(initial = emptyList())
+    val screenTimeTarget = remember(targets) { targets.find { it.id == "screenTime" } }
+    val subtitle = screenTimeTarget?.headerAction?.subtitle ?: ""
+
+    if (screenTimeProvider == null || subtitle.isNullOrEmpty()) return
+
+    PreferenceGroup(
+        heading = stringResource(id = R.string.smartspace_screen_time),
+        modifier = modifier.padding(top = 8.dp),
+    ) {
+        Item {
+            Text(
+                text = subtitle.toString(),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 

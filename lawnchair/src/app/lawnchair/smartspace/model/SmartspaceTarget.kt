@@ -51,5 +51,6 @@ data class SmartspaceTarget(
         FEATURE_STEP_DATE,
         FEATURE_BLAZE_BUILD_PROGRESS,
         FEATURE_EARTHQUAKE_OCCURRED,
+        FEATURE_SCREEN_TIME,
     }
 }

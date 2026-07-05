@@ -704,6 +704,11 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    val smartspaceScreenTime = preference(
+        key = booleanPreferencesKey("enable_smartspace_screen_time"),
+        defaultValue = true,
+    )
+
     val smartspaceShowDate = preference(
         key = booleanPreferencesKey("smartspace_show_date"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_smartspace_show_date),

@@ -194,7 +194,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     private boolean mLayoutHorizontal;
     private final boolean mIsRtl;
-    private final int mIconSize;
+    private int mIconSize;
 
     @ViewDebug.ExportedProperty(category = "launcher")
     private boolean mHideBadge = false;
@@ -1464,6 +1464,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     public int getIconSize() {
         return mIconSize;
+    }
+
+    /** Override the icon drawable size. Call before {@link #applyFromWorkspaceItem}. */
+    public void setIconSizeOverride(int iconSize) {
+        mIconSize = iconSize;
     }
 
     public boolean isDisplaySearchResult() {

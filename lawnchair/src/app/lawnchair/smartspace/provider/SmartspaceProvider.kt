@@ -31,6 +31,7 @@ class SmartspaceProvider @Inject constructor(
         TorchProvider(context),
         NowPlayingProvider(context),
         OnboardingProvider(context),
+        ScreenTimeProvider(context),
     )
 
     private val state = dataSources

@@ -16,6 +16,7 @@
     <include domain="database" path="launcher_7_by_7.db" />
     <include domain="database" path="launcher_8_by_3.db" />
     <include domain="sharedpref" path="com.android.launcher3.prefs.xml" />
+    <include domain="sharedpref" path="screen_time_prefs.xml" />
     <include domain="file" path="downgrade_schema.json" />
 
 </full-backup-content>

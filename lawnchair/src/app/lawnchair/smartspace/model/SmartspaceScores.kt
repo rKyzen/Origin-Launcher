@@ -6,6 +6,7 @@ object SmartspaceScores {
     const val SCORE_MEDIA = 2f
     const val SCORE_CALENDAR = 3f
     const val SCORE_LOW_BATTERY = 10f
-    const val SCORE_FLASHLIGHT = 11f
+    const val SCORE_SCREEN_TIME = 11f
+    const val SCORE_FLASHLIGHT = 12f
     const val SCORE_ONBOARDING = 1000f
 }

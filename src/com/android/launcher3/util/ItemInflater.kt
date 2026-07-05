@@ -113,6 +113,11 @@ class ItemInflater<T>(
             else R.layout.app_icon
         val favorite =
             LayoutInflater.from(parent.context).inflate(layout, parent, false) as BubbleTextView
+        if (info.spanX > 1 || info.spanY > 1) {
+            val dp = context.deviceProfile
+            val span = maxOf(info.spanX, info.spanY)
+            favorite.setIconSizeOverride(dp.iconSizePx * span)
+        }
         favorite.applyFromWorkspaceItem(info)
         favorite.setOnClickListener(clickListener)
         favorite.onFocusChangeListener = focusListener

@@ -60,6 +60,9 @@ import com.android.launcher3.util.PackageUserKey
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo
 import com.android.launcher3.widget.WidgetInflater
 import com.android.launcher3.widget.util.WidgetSizes
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.util.ComponentKey
+import org.json.JSONObject
 
 /**
  * This items is used by LoaderTask to process items that have been loaded from the Launcher's DB.
@@ -88,6 +91,19 @@ class WorkspaceItemProcessor(
     private val unlockedUsers: LongSparseArray<Boolean>,
     private val allDeepShortcuts: MutableList<CacheableShortcutInfo>,
 ) {
+    private val appIconSpanOverrides: Map<String, Int> by lazy {
+        try {
+            val json = LauncherPrefs.get(context).get(LauncherPrefs.APP_ICON_SPAN_OVERRIDES)
+            if (json.isEmpty()) emptyMap()
+            else JSONObject(json).run {
+                keys().asSequence().mapNotNull { key ->
+                    optInt(key, 0).takeIf { it >= 2 }?.let { key to it }
+                }.toMap()
+            }
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
 
     private val loadedItems = IntSparseArrayMap<ItemInfo>()
 
@@ -370,8 +386,18 @@ class WorkspaceItemProcessor(
             c.applyCommonProperties(info)
             info.intent = intent
             info.rank = c.rank
-            info.spanX = 1
-            info.spanY = 1
+            info.spanX = c.spanX.coerceAtLeast(1)
+            info.spanY = c.spanY.coerceAtLeast(1)
+            if (cn != null && c.isOnWorkspaceOrHotseat) {
+                val key = ComponentKey(cn, c.user).toString()
+                appIconSpanOverrides[key]?.let { span ->
+                    val fits = info.cellX + span <= idp.numColumns && info.cellY + span <= idp.numRows
+                    if (fits) {
+                        info.spanX = span
+                        info.spanY = span
+                    }
+                }
+            }
             info.runtimeStatusFlags = info.runtimeStatusFlags or disabledState
             if (isSafeMode && !appInfoWrapper.isSystem()) {
                 info.runtimeStatusFlags =
